@@ -1,0 +1,72 @@
+name: Autograding Tests
+on:
+  - push
+  - workflow_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  autograding:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: FIFO Cache Test
+        id: fifo-test
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: FIFO Cache Test
+          setup-command: go mod download
+          command: go test ./tests -run TestFIFOCache -v
+          timeout: 30
+          max-score: 10
+
+      - name: LRU Cache Test
+        id: lru-test
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: LRU Cache Test
+          setup-command: go mod download
+          command: go test ./tests -run TestLRUCache -v
+          timeout: 30
+          max-score: 10
+
+      - name: LFU Cache Test
+        id: lfu-test
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: LFU Cache Test
+          setup-command: go mod download
+          command: go test ./tests -run TestLFUCache -v
+          timeout: 30
+          max-score: 10
+
+      - name: TTL Cache Test
+        id: ttl-test
+        uses: classroom-resources/autograding-command-grader@v1
+        with:
+          test-name: TTL Cache Test
+          setup-command: go mod download
+          command: go test ./tests -run TestTTLCache -v
+          timeout: 30
+          max-score: 10
+
+      - name: Autograding Reporter
+        uses: education/autograding-grading-reporter@v1
+        env:
+          FIFO-TEST_RESULTS: "${{steps.fifo-test.outputs.result}}"
+          LRU-TEST_RESULTS: "${{steps.lru-test.outputs.result}}"
+          LFU-TEST_RESULTS: "${{steps.lfu-test.outputs.result}}"
+          TTL-TEST_RESULTS: "${{steps.ttl-test.outputs.result}}"
+        with:
+          runners: fifo-test,lru-test,lfu-test,ttl-test 

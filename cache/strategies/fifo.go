@@ -1,0 +1,80 @@
+package strategies
+
+import "errors"
+
+// Common errors
+var (
+	ErrKeyNotFound = errors.New("key not found")
+	ErrCacheFull   = errors.New("cache is full")
+)
+
+// FIFOCache implements a First In, First Out cache
+type FIFOCache[K comparable, V any] struct {
+	capacity int
+	data     map[K]V
+	keys     []K
+}
+
+// NewFIFOCache creates a new FIFO cache with the given capacity
+func NewFIFOCache[K comparable, V any](capacity int) *FIFOCache[K, V] {
+	return &FIFOCache[K, V]{
+		capacity: capacity,
+		data:     make(map[K]V),
+		keys:     make([]K, 0),
+	}
+}
+
+// Get retrieves a value by key
+func (f *FIFOCache[K, V]) Get(key K) (V, error) {
+	if value, exists := f.data[key]; exists {
+		return value, nil
+	}
+	var zero V
+	return zero, ErrKeyNotFound
+}
+
+// Set adds or updates a key-value pair
+func (f *FIFOCache[K, V]) Set(key K, value V) error {
+	// If key already exists, just update the value
+	if _, exists := f.data[key]; exists {
+		f.data[key] = value
+		return nil
+	}
+
+	// If cache is full, evict the oldest item (first in)
+	if len(f.data) >= f.capacity {
+		oldestKey := f.keys[0]
+		delete(f.data, oldestKey)
+		f.keys = f.keys[1:] // Remove the oldest key
+	}
+
+	// Add the new key-value pair
+	f.data[key] = value
+	f.keys = append(f.keys, key)
+	return nil
+}
+
+// Delete removes a key-value pair
+func (f *FIFOCache[K, V]) Delete(key K) error {
+	if _, exists := f.data[key]; !exists {
+		return ErrKeyNotFound
+	}
+
+	delete(f.data, key)
+
+	// Remove the key from the keys slice
+	for i, k := range f.keys {
+		if k == key {
+			f.keys = append(f.keys[:i], f.keys[i+1:]...)
+			break
+		}
+	}
+
+	return nil
+}
+
+// Clear removes all key-value pairs
+func (f *FIFOCache[K, V]) Clear() {
+	f.data = make(map[K]V)
+	f.keys = make([]K, 0)
+}
