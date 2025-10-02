@@ -1,4 +1,4 @@
-package cache_test
+package strategies_test
 
 import (
 	"testing"
@@ -50,4 +50,4 @@ func TestLFUCache(t *testing.T) {
 	val, err = c.Get("d")
 	require.NoError(t, err)
 	assert.Equal(t, 4, val)
-} 
+}

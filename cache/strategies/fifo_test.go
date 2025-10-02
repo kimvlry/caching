@@ -1,6 +1,7 @@
-package cache_test
+package strategies_test
 
 import (
+	"caching-labwork/cache/common"
 	"testing"
 
 	"caching-labwork/cache"
@@ -30,7 +31,7 @@ func TestFIFOCache(t *testing.T) {
 
 	_, err = c.Get("a")
 	assert.Error(t, err)
-	assert.Equal(t, cache.ErrKeyNotFound, err)
+	assert.Equal(t, common.ErrKeyNotFound, err)
 
 	val, err = c.Get("b")
 	require.NoError(t, err)
@@ -47,4 +48,4 @@ func TestFIFOCache(t *testing.T) {
 	c.Clear()
 	_, err = c.Get("c")
 	assert.Error(t, err)
-} 
+}

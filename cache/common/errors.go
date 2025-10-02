@@ -1,4 +1,4 @@
-package cache
+package common
 
 import "errors"
 
@@ -6,4 +6,4 @@ import "errors"
 var (
 	ErrKeyNotFound = errors.New("key not found")
 	ErrCacheFull   = errors.New("cache is full")
-) 
+)

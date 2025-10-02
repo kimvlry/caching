@@ -1,11 +1,7 @@
 package strategies
 
-import "errors"
-
-// Common errors
-var (
-	ErrKeyNotFound = errors.New("key not found")
-	ErrCacheFull   = errors.New("cache is full")
+import (
+	"caching-labwork/cache/common"
 )
 
 // FIFOCache implements a First In, First Out cache
@@ -19,7 +15,7 @@ type FIFOCache[K comparable, V any] struct {
 func NewFIFOCache[K comparable, V any](capacity int) *FIFOCache[K, V] {
 	return &FIFOCache[K, V]{
 		capacity: capacity,
-		data:     make(map[K]V),
+		data:     make(map[K]V, capacity),
 		keys:     make([]K, 0),
 	}
 }
@@ -30,7 +26,7 @@ func (f *FIFOCache[K, V]) Get(key K) (V, error) {
 		return value, nil
 	}
 	var zero V
-	return zero, ErrKeyNotFound
+	return zero, common.ErrKeyNotFound
 }
 
 // Set adds or updates a key-value pair
@@ -57,7 +53,7 @@ func (f *FIFOCache[K, V]) Set(key K, value V) error {
 // Delete removes a key-value pair
 func (f *FIFOCache[K, V]) Delete(key K) error {
 	if _, exists := f.data[key]; !exists {
-		return ErrKeyNotFound
+		return common.ErrKeyNotFound
 	}
 
 	delete(f.data, key)

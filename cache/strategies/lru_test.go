@@ -1,42 +1,46 @@
-package cache_test
+package strategies_test
 
 import (
 	"testing"
-	"time"
 
 	"caching-labwork/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-// TestTTLCache tests the TTL cache implementation
-func TestTTLCache(t *testing.T) {
-	c := cache.NewTTLCache[string, int](3, 100*time.Millisecond)
+// TestLRUCache tests the LRU cache implementation
+func TestLRUCache(t *testing.T) {
+	c := cache.NewLRUCache[string, int](3)
 
 	// Test basic operations
 	err := c.Set("a", 1)
 	require.NoError(t, err)
 	err = c.Set("b", 2)
 	require.NoError(t, err)
+	err = c.Set("c", 3)
+	require.NoError(t, err)
 
+	// Access "a" to make it most recently used
 	val, err := c.Get("a")
 	require.NoError(t, err)
 	assert.Equal(t, 1, val)
 
-	// Wait for expiration
-	time.Sleep(150 * time.Millisecond)
-
-	// Should not find expired entries
-	_, err = c.Get("a")
-	assert.Error(t, err)
+	// Add "d" - should evict "b" (least recently used)
+	err = c.Set("d", 4)
+	require.NoError(t, err)
 
 	_, err = c.Get("b")
 	assert.Error(t, err)
 
-	// Test that new entries work after expiration
-	err = c.Set("c", 3)
+	val, err = c.Get("a")
 	require.NoError(t, err)
+	assert.Equal(t, 1, val)
+
 	val, err = c.Get("c")
 	require.NoError(t, err)
 	assert.Equal(t, 3, val)
-} 
+
+	val, err = c.Get("d")
+	require.NoError(t, err)
+	assert.Equal(t, 4, val)
+}

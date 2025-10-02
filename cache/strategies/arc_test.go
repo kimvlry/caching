@@ -1,4 +1,4 @@
-package cache_test
+package strategies_test
 
 import (
 	"testing"
@@ -43,4 +43,4 @@ func TestARCCache(t *testing.T) {
 	if err == nil {
 		assert.Equal(t, 2, val)
 	}
-} 
+}
