@@ -47,7 +47,7 @@ func (f *FIFOCache[K, V]) Set(key K, value V) error {
 	return nil
 }
 
-// Delete removes a key-value pair
+// Delete removes a key-value pair. Returns error if key not found
 func (f *FIFOCache[K, V]) Delete(key K) error {
 	if _, exists := f.data[key]; !exists {
 		return common.ErrKeyNotFound
