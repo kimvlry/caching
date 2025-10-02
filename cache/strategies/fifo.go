@@ -20,7 +20,7 @@ func NewFIFOCache[K comparable, V any](capacity int) *FIFOCache[K, V] {
 	}
 }
 
-// Get retrieves a value by key
+// Get retrieves a value by key. If key not found, returns zero value and error
 func (f *FIFOCache[K, V]) Get(key K) (V, error) {
 	if value, exists := f.data[key]; exists {
 		return value, nil
@@ -29,22 +29,19 @@ func (f *FIFOCache[K, V]) Get(key K) (V, error) {
 	return zero, common.ErrKeyNotFound
 }
 
-// Set adds or updates a key-value pair
+// Set adds or updates a key-value pair. If cache is full, the oldest item gets evicted (first in)
 func (f *FIFOCache[K, V]) Set(key K, value V) error {
-	// If key already exists, just update the value
 	if _, exists := f.data[key]; exists {
 		f.data[key] = value
 		return nil
 	}
 
-	// If cache is full, evict the oldest item (first in)
 	if len(f.data) >= f.capacity {
 		oldestKey := f.keys[0]
 		delete(f.data, oldestKey)
-		f.keys = f.keys[1:] // Remove the oldest key
+		f.keys = f.keys[1:]
 	}
 
-	// Add the new key-value pair
 	f.data[key] = value
 	f.keys = append(f.keys, key)
 	return nil
@@ -58,7 +55,6 @@ func (f *FIFOCache[K, V]) Delete(key K) error {
 
 	delete(f.data, key)
 
-	// Remove the key from the keys slice
 	for i, k := range f.keys {
 		if k == key {
 			f.keys = append(f.keys[:i], f.keys[i+1:]...)
