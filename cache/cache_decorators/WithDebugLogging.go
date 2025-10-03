@@ -6,20 +6,20 @@ import (
 	"log/slog"
 )
 
-type WithLogging[K comparable, V any] struct {
+type LoggingDecorator[K comparable, V any] struct {
 	cacheWrappee cache.Cache[K, V]
 	logger       *slog.Logger
 }
 
-func NewWithDebugLogging[K comparable, V any](cache cache.Cache[K, V], logger *slog.Logger) *WithLogging[K, V] {
+func WithDebugLogging[K comparable, V any](cache cache.Cache[K, V], logger *slog.Logger) *LoggingDecorator[K, V] {
 	logger = logger.With("cache", fmt.Sprintf("%T", cache))
-	return &WithLogging[K, V]{
+	return &LoggingDecorator[K, V]{
 		cacheWrappee: cache,
 		logger:       logger,
 	}
 }
 
-func (w WithLogging[K, V]) Get(key K) (V, error) {
+func (w LoggingDecorator[K, V]) Get(key K) (V, error) {
 	w.logger.Debug("Get method called", "key", key)
 	val, err := w.cacheWrappee.Get(key)
 	if err != nil {
@@ -29,7 +29,7 @@ func (w WithLogging[K, V]) Get(key K) (V, error) {
 	return val, nil
 }
 
-func (w WithLogging[K, V]) Set(key K, value V) error {
+func (w LoggingDecorator[K, V]) Set(key K, value V) error {
 	w.logger.Debug("Set method called", "key", key)
 	err := w.cacheWrappee.Set(key, value)
 	if err != nil {
@@ -39,7 +39,7 @@ func (w WithLogging[K, V]) Set(key K, value V) error {
 	return nil
 }
 
-func (w WithLogging[K, V]) Delete(key K) error {
+func (w LoggingDecorator[K, V]) Delete(key K) error {
 	w.logger.Debug("Delete method called", "key", key)
 	err := w.cacheWrappee.Delete(key)
 	if err != nil {
@@ -49,7 +49,7 @@ func (w WithLogging[K, V]) Delete(key K) error {
 	return nil
 }
 
-func (w WithLogging[K, V]) Clear() {
+func (w LoggingDecorator[K, V]) Clear() {
 	w.logger.Debug("Clear method called")
 	w.cacheWrappee.Clear()
 }

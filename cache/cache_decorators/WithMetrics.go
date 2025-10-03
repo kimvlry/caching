@@ -9,18 +9,18 @@ import (
 
 // TODO: collect evictions
 
-type WithMetrics[K comparable, V any] struct {
+type MetricsDecorator[K comparable, V any] struct {
 	cacheWrappee cache.Cache[K, V]
 	Collector    metrics.Collector
 }
 
-func NewWithMetrics[K comparable, V any](cache cache.Cache[K, V]) *WithMetrics[K, V] {
-	return &WithMetrics[K, V]{
+func WithMetrics[K comparable, V any](cache cache.Cache[K, V]) *MetricsDecorator[K, V] {
+	return &MetricsDecorator[K, V]{
 		cacheWrappee: cache,
 	}
 }
 
-func (w WithMetrics[K, V]) Get(key K) (V, error) {
+func (w MetricsDecorator[K, V]) Get(key K) (V, error) {
 	val, err := w.cacheWrappee.Get(key)
 	if errors.Is(err, common.ErrKeyNotFound) {
 		w.Collector.RecordMiss()
@@ -31,14 +31,14 @@ func (w WithMetrics[K, V]) Get(key K) (V, error) {
 	return val, err
 }
 
-func (w WithMetrics[K, V]) Set(key K, value V) error {
+func (w MetricsDecorator[K, V]) Set(key K, value V) error {
 	return w.cacheWrappee.Set(key, value)
 }
 
-func (w WithMetrics[K, V]) Delete(key K) error {
+func (w MetricsDecorator[K, V]) Delete(key K) error {
 	return w.cacheWrappee.Delete(key)
 }
 
-func (w WithMetrics[K, V]) Clear() {
+func (w MetricsDecorator[K, V]) Clear() {
 	w.cacheWrappee.Clear()
 }

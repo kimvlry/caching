@@ -9,18 +9,18 @@ import (
 	"io"
 )
 
-type WithCompression[K comparable, V any] struct {
+type CompressionDecorator[K comparable, V any] struct {
 	cacheWrappee cache.Cache[K, []byte]
 	collector    metrics.Collector
 }
 
-func NewWithCompression[K comparable, V any](wrapped cache.Cache[K, []byte]) *WithCompression[K, V] {
-	return &WithCompression[K, V]{
-		cacheWrappee: wrapped,
+func WithCompression[K comparable, V any](wrappee cache.Cache[K, []byte]) *CompressionDecorator[K, V] {
+	return &CompressionDecorator[K, V]{
+		cacheWrappee: wrappee,
 	}
 }
 
-func (w *WithCompression[K, V]) Get(key K) (V, error) {
+func (w *CompressionDecorator[K, V]) Get(key K) (V, error) {
 	compressed, err := w.cacheWrappee.Get(key)
 	if err != nil {
 		var zero V
@@ -41,7 +41,7 @@ func (w *WithCompression[K, V]) Get(key K) (V, error) {
 	return v, nil
 }
 
-func (w *WithCompression[K, V]) Set(key K, value V) error {
+func (w *CompressionDecorator[K, V]) Set(key K, value V) error {
 	rawBytes, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -55,11 +55,11 @@ func (w *WithCompression[K, V]) Set(key K, value V) error {
 	return w.cacheWrappee.Set(key, compressedBytes)
 }
 
-func (w *WithCompression[K, V]) Delete(key K) error {
+func (w *CompressionDecorator[K, V]) Delete(key K) error {
 	return w.cacheWrappee.Delete(key)
 }
 
-func (w *WithCompression[K, V]) Clear() {
+func (w *CompressionDecorator[K, V]) Clear() {
 	w.cacheWrappee.Clear()
 }
 
