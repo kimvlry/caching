@@ -29,7 +29,7 @@ func (f *FIFOCache[K, V]) Get(key K) (V, error) {
 	return zero, common.ErrKeyNotFound
 }
 
-// Set adds or updates a key-value pair. If cache is full, the oldest item gets evicted (first in)
+// Set adds or updates a key-value pair. If cache is full, the oldest pq_item gets evicted (first in)
 func (f *FIFOCache[K, V]) Set(key K, value V) error {
 	if _, exists := f.data[key]; exists {
 		f.data[key] = value
@@ -67,6 +67,6 @@ func (f *FIFOCache[K, V]) Delete(key K) error {
 
 // Clear removes all key-value pairs
 func (f *FIFOCache[K, V]) Clear() {
-	f.data = make(map[K]V)
+	f.data = make(map[K]V, f.capacity)
 	f.keys = make([]K, 0)
 }

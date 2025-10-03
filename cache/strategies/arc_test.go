@@ -28,7 +28,7 @@ func TestARCCache(t *testing.T) {
 	_, err = c.Get("b")
 	require.NoError(t, err)
 
-	// Add new item - should trigger adaptive replacement
+	// Add new pq_item - should trigger adaptive replacement
 	err = c.Set("e", 5)
 	require.NoError(t, err)
 

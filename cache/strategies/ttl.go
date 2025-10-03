@@ -1,6 +1,110 @@
 package strategies
 
-// TTLCache implements a Time To Live cache
+import (
+	"caching-labwork/cache/common"
+	"caching-labwork/cache/common/priority_heap"
+	"caching-labwork/cache/common/priority_heap/heap_item"
+	"container/heap"
+	"sync"
+	"time"
+)
+
 type TTLCache[K comparable, V any] struct {
-	// TODO: Add necessary fields for TTL implementation
+	capacity int
+	ttl      time.Duration
+	data     map[K]*heap_item.TTLHeapItem[K, V]
+	keys     *priority_heap.MinHeap[K, V]
+	mutex    sync.Mutex
+}
+
+func NewTTLCache[K comparable, V any](capacity int, ttl time.Duration) *TTLCache[K, V] {
+	return &TTLCache[K, V]{
+		capacity: capacity,
+		ttl:      ttl,
+		data:     make(map[K]*heap_item.TTLHeapItem[K, V], capacity),
+		keys:     priority_heap.NewMinHeap[K, V](),
+	}
+}
+
+func (T *TTLCache[K, V]) Set(key K, value V) error {
+	T.mutex.Lock()
+	defer T.mutex.Unlock()
+
+	if item, exists := T.data[key]; exists {
+		item.Value = value
+		item.SetPriority(int(time.Now().Add(T.ttl).UnixNano()))
+		heap.Fix(T.keys, item.GetIndex())
+		return nil
+	}
+
+	if len(T.data) >= T.capacity {
+		evicted := heap.Pop(T.keys).(*heap_item.TTLHeapItem[K, V])
+		delete(T.data, evicted.Key)
+	}
+
+	item := heap_item.NewTTLHeapItem(key, value, T.ttl)
+	T.data[key] = item
+	heap.Push(T.keys, item)
+	return nil
+}
+
+func (T *TTLCache[K, V]) Get(key K) (V, error) {
+	T.mutex.Lock()
+	defer T.mutex.Unlock()
+
+	item, exists := T.data[key]
+	if !exists {
+		var zero V
+		return zero, common.ErrKeyNotFound
+	}
+
+	if time.Now().After(item.ExpiresAt) {
+		heap.Remove(T.keys, item.GetIndex())
+		delete(T.data, key)
+		var zero V
+		return zero, common.ErrKeyNotFound
+	}
+
+	return item.Value, nil
+}
+
+func (T *TTLCache[K, V]) Delete(key K) error {
+	T.mutex.Lock()
+	defer T.mutex.Unlock()
+	item, exists := T.data[key]
+	if !exists {
+		return common.ErrKeyNotFound
+	}
+	heap.Remove(T.keys, item.GetIndex())
+	delete(T.data, key)
+	return nil
+}
+
+func (T *TTLCache[K, V]) Clear() {
+	T.mutex.Lock()
+	defer T.mutex.Unlock()
+	T.data = make(map[K]*heap_item.TTLHeapItem[K, V])
+	T.keys = priority_heap.NewMinHeap[K, V]()
+}
+
+func (T *TTLCache[K, V]) StartEvictor(interval time.Duration) {
+	go func() {
+		for {
+			time.Sleep(interval)
+			T.mutex.Lock()
+			for {
+				top := T.keys.Peek()
+				if top == nil {
+					break
+				}
+				item := top.(*heap_item.TTLHeapItem[K, V])
+				if time.Now().Before(item.ExpiresAt) {
+					break
+				}
+				heap.Pop(T.keys)
+				delete(T.data, item.Key)
+			}
+			T.mutex.Unlock()
+		}
+	}()
 }

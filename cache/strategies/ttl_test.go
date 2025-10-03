@@ -1,4 +1,4 @@
-package strategies_test
+package strategies
 
 import (
 	"testing"
