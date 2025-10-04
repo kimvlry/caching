@@ -2,43 +2,108 @@ package decorators
 
 import (
 	"caching-labwork/cache"
-	"caching-labwork/cache/decorators/metrics"
 	"caching-labwork/cache/strategies/common"
 	"errors"
+	"fmt"
+	"sync/atomic"
 )
-
-// TODO: collect evictions
 
 type MetricsDecorator[K comparable, V any] struct {
 	cacheWrappee cache.Cache[K, V]
-	Collector    metrics.Collector
+
+	hits   atomic.Int64
+	misses atomic.Int64
+	evicts atomic.Int64
+
+	bytesRaw        atomic.Value
+	bytesCompressed atomic.Value
 }
 
-func WithMetrics[K comparable, V any](cache cache.Cache[K, V]) *MetricsDecorator[K, V] {
-	return &MetricsDecorator[K, V]{
-		cacheWrappee: cache,
+func WithMetrics[K comparable, V any](wrappee cache.Cache[K, V]) *MetricsDecorator[K, V] {
+	decorator := &MetricsDecorator[K, V]{
+		cacheWrappee: wrappee,
 	}
+	if observable, ok := wrappee.(cache.ObservableCache[K, V]); ok {
+		observable.OnEvent(func(event cache.Event[K, V]) {
+			switch event.Type {
+			case cache.EventTypeHit:
+				decorator.hits.Add(1)
+			case cache.EventTypeMiss:
+				decorator.misses.Add(1)
+			case cache.EventTypeEviction:
+				decorator.evicts.Add(1)
+			case cache.EventTypeReadBytes:
+				decorator.bytesRaw.Store(event.Value)
+			case cache.EventTypeCompressBytes:
+				decorator.bytesCompressed.Store(event.Value)
+			}
+		})
+	}
+
+	return decorator
 }
 
-func (w MetricsDecorator[K, V]) Get(key K) (V, error) {
-	val, err := w.cacheWrappee.Get(key)
-	if errors.Is(err, common.ErrKeyNotFound) {
-		w.Collector.RecordMiss()
+func (m *MetricsDecorator[K, V]) HitRate() float64 {
+	hits := m.hits.Load()
+	misses := m.misses.Load()
+	total := hits + misses
+	if total == 0 {
+		return 0.0
 	}
+	return float64(hits) / float64(total)
+}
+
+func (m *MetricsDecorator[K, V]) CompressionRate() float64 {
+	raw := m.bytesRaw.Load()
+	compressed := m.bytesCompressed.Load()
+	if compressedFloat, ok := compressed.(float64); ok {
+		if rawFloat, ok := raw.(float64); ok {
+			if rawFloat == 0.0 {
+				return 0.0
+			}
+			return compressedFloat / rawFloat
+		}
+	}
+	panic(fmt.Sprintf("CompressionRate: unexpected error "+
+		" - couldn't cast raw (%v) and compressed (%v) bytes to float",
+		raw, compressed))
+}
+
+func (m *MetricsDecorator[K, V]) GetHits() int64 {
+	return m.hits.Load()
+}
+
+func (m *MetricsDecorator[K, V]) GetMisses() int64 {
+	return m.misses.Load()
+}
+
+func (m *MetricsDecorator[K, V]) GetEvicts() int64 {
+	return m.evicts.Load()
+}
+
+func (w *MetricsDecorator[K, V]) Get(key K) (V, error) {
+	v, err := w.cacheWrappee.Get(key)
 	if err == nil {
-		w.Collector.RecordHit()
+		w.hits.Add(1)
 	}
-	return val, err
+	if errors.Is(err, common.ErrKeyNotFound) {
+		w.misses.Add(1)
+	}
+	return v, err
 }
 
-func (w MetricsDecorator[K, V]) Set(key K, value V) error {
+func (w *MetricsDecorator[K, V]) Set(key K, value V) error {
 	return w.cacheWrappee.Set(key, value)
 }
 
-func (w MetricsDecorator[K, V]) Delete(key K) error {
-	return w.cacheWrappee.Delete(key)
+func (w *MetricsDecorator[K, V]) Delete(key K) error {
+	err := w.cacheWrappee.Delete(key)
+	if errors.Is(err, common.ErrKeyNotFound) {
+		w.misses.Add(1)
+	}
+	return err
 }
 
-func (w MetricsDecorator[K, V]) Clear() {
+func (w *MetricsDecorator[K, V]) Clear() {
 	w.cacheWrappee.Clear()
 }
