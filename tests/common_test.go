@@ -1,7 +1,7 @@
 package cache_test
 
 import (
-	"caching-labwork/cache/fabric"
+	"caching-labwork/cache/strategies"
 	"caching-labwork/cache/strategies/common"
 	"testing"
 
@@ -11,7 +11,7 @@ import (
 
 // TestCacheErrors tests error conditions that apply to all cache implementations
 func TestCacheErrors(t *testing.T) {
-	c := fabric.NewFIFOCache[string, int](1)
+	c := strategies.NewFIFOCache[string, int](1)
 
 	// Test getting non-existent key
 	_, err := c.Get("nonexistent")
