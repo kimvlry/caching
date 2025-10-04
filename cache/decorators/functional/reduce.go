@@ -1,6 +1,6 @@
 package functional
 
-import "caching-labwork/cache"
+import "github.com/kimvlry/caching/cache"
 
 func WithReduce[K comparable, V any, R any](
 	wrappee cache.IterableCache[K, V],

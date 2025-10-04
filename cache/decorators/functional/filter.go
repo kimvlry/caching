@@ -1,8 +1,8 @@
 package functional
 
 import (
-	"caching-labwork/cache"
 	"fmt"
+	"github.com/kimvlry/caching/cache"
 )
 
 func WithFilter[K comparable, V any](

@@ -1,8 +1,8 @@
 package strategies
 
 import (
-	"caching-labwork/cache"
-	"caching-labwork/cache/strategies/common"
+	"github.com/kimvlry/caching/cache"
+	"github.com/kimvlry/caching/cache/strategies/common"
 )
 
 // LRUCache implements a Least Recently Used cache

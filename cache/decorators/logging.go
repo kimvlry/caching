@@ -1,8 +1,8 @@
 package decorators
 
 import (
-	"caching-labwork/cache"
 	"fmt"
+	"github.com/kimvlry/caching/cache"
 	"log/slog"
 )
 

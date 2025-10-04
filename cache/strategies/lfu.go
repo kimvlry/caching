@@ -1,11 +1,11 @@
 package strategies
 
 import (
-	"caching-labwork/cache"
-	"caching-labwork/cache/strategies/common"
-	"caching-labwork/cache/strategies/priority_heap"
-	"caching-labwork/cache/strategies/priority_heap/heap_item"
 	"container/heap"
+	"github.com/kimvlry/caching/cache"
+	"github.com/kimvlry/caching/cache/strategies/common"
+	"github.com/kimvlry/caching/cache/strategies/priority_heap"
+	"github.com/kimvlry/caching/cache/strategies/priority_heap/heap_item"
 )
 
 type LFUCache[K comparable, V any] struct {

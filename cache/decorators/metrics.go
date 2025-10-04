@@ -1,9 +1,9 @@
 package decorators
 
 import (
-	"caching-labwork/cache"
-	"caching-labwork/cache/strategies/common"
 	"errors"
+	"github.com/kimvlry/caching/cache"
+	"github.com/kimvlry/caching/cache/strategies/common"
 	"sync/atomic"
 )
 

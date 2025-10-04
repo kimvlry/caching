@@ -1,17 +1,17 @@
 package priority_heap
 
 import (
-	common "caching-labwork/cache/strategies/priority_heap/heap_item"
 	"container/heap"
+	"github.com/kimvlry/caching/cache/strategies/priority_heap/heap_item"
 )
 
 type MinHeap[K comparable, V any] struct {
-	items []common.Item[K, V]
+	items []heap_item.Item[K, V]
 }
 
 func NewMinHeap[K comparable, V any]() *MinHeap[K, V] {
 	return &MinHeap[K, V]{
-		items: []common.Item[K, V]{},
+		items: []heap_item.Item[K, V]{},
 	}
 }
 
@@ -30,7 +30,7 @@ func (h *MinHeap[K, V]) Swap(i, j int) {
 }
 
 func (h *MinHeap[K, V]) Push(x any) {
-	item := x.(common.Item[K, V])
+	item := x.(heap_item.Item[K, V])
 	item.SetIndex(len(h.items))
 	h.items = append(h.items, item)
 }
@@ -43,12 +43,12 @@ func (h *MinHeap[K, V]) Pop() any {
 	return item
 }
 
-func (h *MinHeap[K, V]) Update(item common.Item[K, V], newPriority int) {
+func (h *MinHeap[K, V]) Update(item heap_item.Item[K, V], newPriority int) {
 	item.SetPriority(newPriority)
 	heap.Fix(h, item.GetIndex())
 }
 
-func (h *MinHeap[K, V]) Peek() common.Item[K, V] {
+func (h *MinHeap[K, V]) Peek() heap_item.Item[K, V] {
 	if len(h.items) == 0 {
 		return nil
 	}

@@ -2,9 +2,9 @@ package decorators
 
 import (
 	"bytes"
-	"caching-labwork/cache"
 	"compress/gzip"
 	"encoding/json"
+	"github.com/kimvlry/caching/cache"
 	"io"
 )
 

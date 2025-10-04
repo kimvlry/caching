@@ -1,8 +1,8 @@
 package strategies_test
 
 import (
-	"caching-labwork/cache/strategies"
-	"caching-labwork/cache/strategies/common"
+	"github.com/kimvlry/caching/cache/strategies"
+	"github.com/kimvlry/caching/cache/strategies/common"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

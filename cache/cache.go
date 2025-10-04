@@ -8,7 +8,6 @@ type Cache[K comparable, V any] interface {
 	Clear()
 }
 
-// This file contains the Cache interface and shared errors for the cache package.
 // Individual cache implementations are in separate files:
 // - fifo.go: FIFO cache implementation
 // - lru.go: LRU cache implementation
