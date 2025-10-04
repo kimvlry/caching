@@ -7,10 +7,7 @@ type ObservableCache[K comparable, V any] interface {
 type EventType string
 
 const (
-	EventTypeHit      EventType = "hit"
-	EventTypeMiss     EventType = "miss"
-	EventTypeEviction EventType = "eviction"
-
+	EventTypeEviction      EventType = "eviction"
 	EventTypeReadBytes     EventType = "write raw bytes"
 	EventTypeCompressBytes EventType = "compress bytes"
 )
