@@ -25,10 +25,6 @@ func WithMetrics[K comparable, V any](wrappee cache.Cache[K, V]) *MetricsDecorat
 	if observable, ok := wrappee.(cache.ObservableCache[K, V]); ok {
 		observable.OnEvent(func(event cache.Event[K, V]) {
 			switch event.Type {
-			case cache.EventTypeHit:
-				decorator.hits.Add(1)
-			case cache.EventTypeMiss:
-				decorator.misses.Add(1)
 			case cache.EventTypeEviction:
 				decorator.evicts.Add(1)
 			case cache.EventTypeReadBytes:
