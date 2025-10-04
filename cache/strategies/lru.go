@@ -18,7 +18,7 @@ func NewLRUCache[K comparable, V any](capacity int) *LRUCache[K, V] {
 	return &LRUCache[K, V]{
 		capacity: capacity,
 		data:     make(map[K]V, capacity),
-		keys:     make([]K, capacity),
+		keys:     make([]K, 0, capacity),
 	}
 }
 
