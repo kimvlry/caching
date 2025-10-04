@@ -1,16 +1,16 @@
 package strategies_test
 
 import (
+	"caching-labwork/cache/fabric"
 	"testing"
 
-	"caching-labwork/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestLRUCache tests the LRU cache implementation
 func TestLRUCache(t *testing.T) {
-	c := cache.NewLRUCache[string, int](3)
+	c := fabric.NewLRUCache[string, int](3)
 
 	// Test basic operations
 	err := c.Set("a", 1)

@@ -1,16 +1,16 @@
 package strategies_test
 
 import (
+	"caching-labwork/cache/fabric"
 	"testing"
 
-	"caching-labwork/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestARCCache tests the ARC cache implementation (advanced)
 func TestARCCache(t *testing.T) {
-	c := cache.NewARCCache[string, int](4)
+	c := fabric.NewARCCache[string, int](4)
 
 	// Test basic operations
 	err := c.Set("a", 1)

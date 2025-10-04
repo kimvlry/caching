@@ -1,17 +1,17 @@
 package strategies
 
 import (
+	"caching-labwork/cache/fabric"
 	"testing"
 	"time"
 
-	"caching-labwork/cache"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // TestTTLCache tests the TTL cache implementation
 func TestTTLCache(t *testing.T) {
-	c := cache.NewTTLCache[string, int](3, 100*time.Millisecond)
+	c := fabric.NewTTLCache[string, int](3, 100*time.Millisecond)
 
 	// Test basic operations
 	err := c.Set("a", 1)
