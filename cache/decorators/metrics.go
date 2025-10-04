@@ -32,9 +32,9 @@ func WithMetrics[K comparable, V any](wrappee cache.Cache[K, V]) *MetricsDecorat
 			case cache.EventTypeEviction:
 				decorator.evicts.Add(1)
 			case cache.EventTypeReadBytes:
-				decorator.rawBytesNum.Store(int64(event.Size))
+				decorator.rawBytesNum.Add(int64(event.Size))
 			case cache.EventTypeCompressBytes:
-				decorator.compressedBytesNum.Store(int64(event.Size))
+				decorator.compressedBytesNum.Add(int64(event.Size))
 			}
 		})
 	}
@@ -69,7 +69,7 @@ func (m *MetricsDecorator[K, V]) GetMisses() int64 {
 	return m.misses.Load()
 }
 
-func (m *MetricsDecorator[K, V]) GetEvicts() int64 {
+func (m *MetricsDecorator[K, V]) GetEvictions() int64 {
 	return m.evicts.Load()
 }
 

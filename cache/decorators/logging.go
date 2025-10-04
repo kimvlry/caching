@@ -26,7 +26,7 @@ func (w *LoggingDecorator[K, V]) Get(key K) (V, error) {
 		w.logger.Warn("Get method returned an error", "key", key, "err", err)
 	}
 	w.logger.Debug("Get method returned a value", "key", key, "val", val)
-	return val, nil
+	return val, err
 }
 
 func (w *LoggingDecorator[K, V]) Set(key K, value V) error {
@@ -36,7 +36,7 @@ func (w *LoggingDecorator[K, V]) Set(key K, value V) error {
 		w.logger.Warn("Set method returned an error", "key", key, "err", err)
 	}
 	w.logger.Debug("Set method returned a value", "key", key, "val", value)
-	return nil
+	return err
 }
 
 func (w *LoggingDecorator[K, V]) Delete(key K) error {
@@ -46,7 +46,7 @@ func (w *LoggingDecorator[K, V]) Delete(key K) error {
 		w.logger.Warn("Delete method returned an error", "key", key, "err", err)
 	}
 	w.logger.Debug("Delete method returned a value", "key", key, "val", key)
-	return nil
+	return err
 }
 
 func (w *LoggingDecorator[K, V]) Clear() {
