@@ -4,7 +4,6 @@ import (
 	"caching-labwork/cache"
 	"caching-labwork/cache/strategies/common"
 	"errors"
-	"fmt"
 	"sync/atomic"
 )
 
@@ -15,8 +14,8 @@ type MetricsDecorator[K comparable, V any] struct {
 	misses atomic.Int64
 	evicts atomic.Int64
 
-	bytesRaw        atomic.Value
-	bytesCompressed atomic.Value
+	rawBytesNum        atomic.Int64
+	compressedBytesNum atomic.Int64
 }
 
 func WithMetrics[K comparable, V any](wrappee cache.Cache[K, V]) *MetricsDecorator[K, V] {
@@ -33,9 +32,9 @@ func WithMetrics[K comparable, V any](wrappee cache.Cache[K, V]) *MetricsDecorat
 			case cache.EventTypeEviction:
 				decorator.evicts.Add(1)
 			case cache.EventTypeReadBytes:
-				decorator.bytesRaw.Store(event.Value)
+				decorator.rawBytesNum.Store(int64(event.Size))
 			case cache.EventTypeCompressBytes:
-				decorator.bytesCompressed.Store(event.Value)
+				decorator.compressedBytesNum.Store(int64(event.Size))
 			}
 		})
 	}
@@ -54,19 +53,12 @@ func (m *MetricsDecorator[K, V]) HitRate() float64 {
 }
 
 func (m *MetricsDecorator[K, V]) CompressionRate() float64 {
-	raw := m.bytesRaw.Load()
-	compressed := m.bytesCompressed.Load()
-	if compressedFloat, ok := compressed.(float64); ok {
-		if rawFloat, ok := raw.(float64); ok {
-			if rawFloat == 0.0 {
-				return 0.0
-			}
-			return compressedFloat / rawFloat
-		}
+	raw := m.rawBytesNum.Load()
+	compressed := m.compressedBytesNum.Load()
+	if raw == 0.0 {
+		return 0.0
 	}
-	panic(fmt.Sprintf("CompressionRate: unexpected error "+
-		" - couldn't cast raw (%v) and compressed (%v) bytes to float",
-		raw, compressed))
+	return float64(compressed) / float64(raw)
 }
 
 func (m *MetricsDecorator[K, V]) GetHits() int64 {
