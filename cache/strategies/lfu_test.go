@@ -1,7 +1,7 @@
 package strategies_test
 
 import (
-	"caching-labwork/cache/fabric"
+	"caching-labwork/cache/strategies"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,7 +10,7 @@ import (
 
 // TestLFUCache tests the LFU cache implementation
 func TestLFUCache(t *testing.T) {
-	c := fabric.NewLFUCache[string, int](3)
+	c := strategies.NewLFUCache[string, int](3)
 
 	// Test basic operations
 	err := c.Set("a", 1)

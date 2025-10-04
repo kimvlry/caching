@@ -1,7 +1,7 @@
 package strategies_test
 
 import (
-	"caching-labwork/cache/fabric"
+	"caching-labwork/cache/strategies"
 	"caching-labwork/cache/strategies/common"
 	"testing"
 
@@ -11,7 +11,7 @@ import (
 
 // TestFIFOCache tests the FIFO cache implementation
 func TestFIFOCache(t *testing.T) {
-	c := fabric.NewFIFOCache[string, int](3)
+	c := strategies.NewFIFOCache[string, int](3)
 
 	// Test basic operations
 	err := c.Set("a", 1)

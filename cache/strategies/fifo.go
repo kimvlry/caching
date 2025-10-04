@@ -19,7 +19,7 @@ func NewFIFOCache[K comparable, V any](capacity int) *FIFOCache[K, V] {
 	return &FIFOCache[K, V]{
 		capacity: capacity,
 		data:     make(map[K]V, capacity),
-		keys:     make([]K, 0),
+		keys:     make([]K, 0, capacity),
 	}
 }
 

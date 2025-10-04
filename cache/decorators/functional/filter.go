@@ -2,14 +2,13 @@ package functional
 
 import (
 	"caching-labwork/cache"
-	"caching-labwork/cache/fabric"
 	"fmt"
 )
 
 func WithFilter[K comparable, V any](
 	wrappee cache.IterableCache[K, V],
 	pred func(V) bool,
-	factory fabric.Factory[K, V],
+	factory CacheFactory[K, V],
 ) cache.Cache[K, V] {
 
 	res := factory()
