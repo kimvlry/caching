@@ -1,6 +1,7 @@
 package strategies
 
 import (
+	"caching-labwork/cache"
 	"caching-labwork/cache/strategies/common"
 	"caching-labwork/cache/strategies/priority_heap"
 	"caching-labwork/cache/strategies/priority_heap/heap_item"
@@ -17,6 +18,8 @@ type TTLCache[K comparable, V any] struct {
 	data     map[K]*heap_item.TTLHeapItem[K, V]
 	keys     *priority_heap.MinHeap[K, V]
 	mutex    sync.Mutex
+
+	eventCallbacks []func(cache.Event[K, V])
 }
 
 func NewTTLCache[K comparable, V any](capacity int, ttl time.Duration) *TTLCache[K, V] {
@@ -42,6 +45,12 @@ func (T *TTLCache[K, V]) Set(key K, value V) error {
 	if len(T.data) >= T.capacity {
 		evicted := heap.Pop(T.keys).(*heap_item.TTLHeapItem[K, V])
 		delete(T.data, evicted.Key)
+
+		T.emit(cache.Event[K, V]{
+			Type:  cache.EventTypeEviction,
+			Key:   evicted.Key,
+			Value: evicted.Value,
+		})
 	}
 
 	item := heap_item.NewTTLHeapItem(key, value, T.ttl)
@@ -89,6 +98,20 @@ func (T *TTLCache[K, V]) Clear() {
 	T.keys = priority_heap.NewMinHeap[K, V]()
 }
 
+func (L *TTLCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
+	L.eventCallbacks = append(L.eventCallbacks, callback)
+}
+
+func (L *TTLCache[K, V]) emit(event cache.Event[K, V]) {
+	for _, callback := range L.eventCallbacks {
+		callback(event)
+	}
+}
+
+func (T *TTLCache[K, V]) Range(f func(K, V) bool) {
+	// TODO: implement
+}
+
 func (T *TTLCache[K, V]) StartEvictor(interval time.Duration) {
 	go func() {
 		for {
@@ -105,6 +128,12 @@ func (T *TTLCache[K, V]) StartEvictor(interval time.Duration) {
 				}
 				heap.Pop(T.keys)
 				delete(T.data, item.Key)
+
+				T.emit(cache.Event[K, V]{
+					Type:  cache.EventTypeEviction,
+					Key:   item.Key,
+					Value: item.Value,
+				})
 			}
 			T.mutex.Unlock()
 		}
