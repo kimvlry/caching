@@ -1,6 +1,8 @@
 package strategies
 
-import "caching-labwork/cache/common"
+import (
+	"caching-labwork/cache/strategies/common"
+)
 
 // LRUCache implements a Least Recently Used cache
 type LRUCache[K comparable, V any] struct {

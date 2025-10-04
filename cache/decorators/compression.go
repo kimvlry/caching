@@ -3,7 +3,7 @@ package decorators
 import (
 	"bytes"
 	"caching-labwork/cache"
-	"caching-labwork/cache/cache_decorators/metrics"
+	"caching-labwork/cache/decorators/metrics"
 	"compress/gzip"
 	"encoding/json"
 	"io"

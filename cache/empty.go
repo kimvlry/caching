@@ -1,6 +1,8 @@
 package cache
 
-import "caching-labwork/cache/common"
+import (
+	"caching-labwork/cache/strategies/common"
+)
 
 // emptyCache is a non-functional implementation for testing
 type emptyCache[K comparable, V any] struct{}

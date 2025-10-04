@@ -1,6 +1,3 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/87ylncIN)
-# Лабораторная работа 2: In-memory кэш 
-
 ## Цель работы
 Научиться применять функции высшего порядка, а также освоить ключевые концепции для создания гибкого и типизированного кода.
 Студенты закрепят навыки:
@@ -9,53 +6,6 @@
 - Реализации операций `map`, `filter` и `reduce` в Go
 - Работы с интерфейсами и их реализацией
 - Использования пустых интерфейсов и type assertion
-- Применения композиции
-- Использования дженериков для универсальных решений
-
-
-## Задание
-- Реализовать систему кэширования с поддержкой различных стратегий управления данными
-- Реализовать различные декораторы, полезные при работе с кэшом: декоратор для сбора метрик, декораторы, реализующие поведение чистых функций (`map`, `filter`, `reduce`) и т.д. При реализации декораторов можно использовать новые интерфейсы.
-
-## Формулировка
-Дан базовый интерфейс кэша:
-```
-type Cache[K comparable, V any] interface {
-    Get(key K) (V, error)
-    Set(key K, value V) error
-    Delete(key K) error
-    Clear()
-}
-```
-
-###  Стратегии
-
-На основе этого интерфейса требуется реализовать следующие стратегии:
-1. **FIFO (First-In-First-Out) кэш**
-
-Пример того, как это может выглядеть: 
-
-```
-    type lruCache[K comparable, V any] struct {
-        capacity  int
-        cache     map[K]*list.Element
-        evictList *list.List
-    }
-
-    func NewLRUCache[K comparable, V any](capacity int) Cache[K, V] {
-        return &lruCache[K, V]{
-            capacity:  capacity,
-            cache:     make(map[K]*list.Element),
-            evictList: list.New(),
-        }
-    }
-```
-
-2. **LRU (Least Recently Used) кэш**
-
-3. **LFU (Least Frequently Used) кэш**
-
-4. **Кэш с поддержкой TTL (Time-To-Live). Автоматическое удаление по истечении времени жизни**
 
 5. **Adaptive replacement cache стратегия**
 
@@ -63,49 +13,11 @@ type Cache[K comparable, V any] interface {
 
 ### Декораторы
 
-Часто при работе с кешами хочется иметь полезные утилиты-надстройки, которые, например, добавят observability функциональность (вроде метрик и дополнительных логов). Распространенная практика в таких случаях - реализовывать такую функциональность через декораторы.
-
-1. Декоратор **WithMetrics**. Он позволит получать основные метрики, полезные при работе с кешами: hit/miss rate, метрика заполненности кэша, key evictions и тд. Для вдохновения можно использовать redis как основу для всевозможных метрик.
-Пример того, как это может выглядеть:
-
-```
-type statsCache[K comparable, V any] struct {
-	cache       Cache[K, V]
-	hits        int
-	misses      int
-	evictions   int
-}
-
-func WithMetrics[K comparable, V any](cache Cache[K, V]) Cache[K, V] {
-	return &statsCache[K, V]{
-		cache: cache,
-	}
-}
-```
-
-2. Декоратор для сжатия данных **WithCompression**. Здесь ключевыми будут факты сериализации и десериализации, можно взять любой комфортный формат - json, gob и тд. Подумать, можно ли как-то получить метрику сжатия данных для декоратора выше. 
-
 3. Декоратор для быстрой проверки отсутствия ключа на основе Bloom Filter **WithBloomFilter**.
-
-4. Декоратор для DEBUG логирования **WithDebugLogging**. Тут можно добавить debug логи до или после каждой операции над кэшом.
 
 
 Как может выглядеть комбинирование декоратора и кэша:
 
-```
-func main() {
-    // Кэш с стратегией LRU и блум-фильтром
-    cache := WithBloomFilter(
-        LRUCache[string, User](100),
-        1000, // capacity битового массива
-        func(key string) []byte { return []byte(key) }, //хэш фукнция
-    )
-
-    // Универсальный кэш с TTL
-    anyCache := TTLCache[string, interface{}](time.Hour)
-    anyCache.Set("config", map[string]int{"timeout": 30})
-}
-```
 
 ### Декораторы функционального программирования
 
@@ -146,33 +58,7 @@ cache := WithMetrics(
 
 ### Нефункциональные требования
 
-1. Примерная структура
-
-```
-cache-lab/
-├── internal/
-│   ├── cache/
-│   │   ├── interfaces.go         # Основные интерфейсы (Cache)
-│   │   ├── strategies/
-│   │   │   ├── lru.go           # LRU реализация
-│   │   │   ├── lru_test.go      # LRU реализация
-│   │   │   ├── fifo.go          # FIFO реализация
-│   │   │   ├── fifo_test.go     # FIFO реализация  
-│   │   │   ├── arc.go           # ARC реализация
-│   │   │   └── ttl.go           # TTL реализация
-│   │   ├── decorators/
-│   │   │   ├── filter.go        # Filter декоратор
-│   │   │   ├── map.go           # Map декоратор
-│   │   │   └── reduce.go        # Reduce декоратор
-│   │   ├── builder.go           # Фабрика для создания кэшей
-├── examples/
-│   ├── simple_cache/            # Базовое использование
-│   │   └── main.go
-├── go.mod                       # Зависимости
-└── README.md                    # Инструкции + документация
-```
-
-2. Должны быть написаны тесты на каждую реализованную стратегию или декоратор. Test coverage > 50%. Файлы с тестами должны лежать рядом с основной функциональностью (см примерную структуру). 
+2. Должны быть написаны тесты на каждую реализованную стратегию или декоратор. Test coverage > 50%. 
 
 3. В examples должны быть базовые примеры использования 
 

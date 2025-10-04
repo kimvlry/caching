@@ -1,7 +1,7 @@
 package cache_test
 
 import (
-	"caching-labwork/cache/common"
+	"caching-labwork/cache/strategies/common"
 	"testing"
 
 	"caching-labwork/cache"

@@ -1,7 +1,7 @@
 package priority_heap
 
 import (
-	common "caching-labwork/cache/common/priority_heap/heap_item"
+	common "caching-labwork/cache/strategies/priority_heap/heap_item"
 	"container/heap"
 )
 

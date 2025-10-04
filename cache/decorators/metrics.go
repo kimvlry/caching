@@ -2,8 +2,8 @@ package decorators
 
 import (
 	"caching-labwork/cache"
-	"caching-labwork/cache/cache_decorators/metrics"
-	"caching-labwork/cache/common"
+	"caching-labwork/cache/decorators/metrics"
+	"caching-labwork/cache/strategies/common"
 	"errors"
 )
 

@@ -1,7 +1,7 @@
 package strategies
 
 import (
-	"caching-labwork/cache/common"
+	"caching-labwork/cache/strategies/common"
 )
 
 // FIFOCache implements a First In, First Out cache

@@ -1,9 +1,9 @@
 package strategies
 
 import (
-	"caching-labwork/cache/common"
-	"caching-labwork/cache/common/priority_heap"
-	"caching-labwork/cache/common/priority_heap/heap_item"
+	"caching-labwork/cache/strategies/common"
+	"caching-labwork/cache/strategies/priority_heap"
+	"caching-labwork/cache/strategies/priority_heap/heap_item"
 	"container/heap"
 )
 
