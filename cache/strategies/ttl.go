@@ -109,7 +109,11 @@ func (L *TTLCache[K, V]) emit(event cache.Event[K, V]) {
 }
 
 func (T *TTLCache[K, V]) Range(f func(K, V) bool) {
-	// TODO: implement
+	for k, v := range T.data {
+		if !f(k, v.Value) {
+			break
+		}
+	}
 }
 
 func (T *TTLCache[K, V]) StartEvictor(interval time.Duration) {

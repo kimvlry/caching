@@ -90,6 +90,10 @@ func (L *FIFOCache[K, V]) emit(event cache.Event[K, V]) {
 	}
 }
 
-func (F *FIFOCache[K, V]) Range(f func(K, V) bool) {
-	// TODO: implement
+func (F *FIFOCache[K, V]) Range(fn func(K, V) bool) {
+	for k, v := range F.data {
+		if !fn(k, v) {
+			break
+		}
+	}
 }

@@ -83,6 +83,10 @@ func (L *LFUCache[K, V]) emit(event cache.Event[K, V]) {
 	}
 }
 
-func (L *LFUCache[K, V]) Range(f func(K, V) bool) {
-	// TODO: implement
+func (L *LFUCache[K, V]) Range(fn func(K, V) bool) {
+	for k, v := range L.data {
+		if !fn(k, v.Value) {
+			break
+		}
+	}
 }

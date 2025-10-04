@@ -77,8 +77,12 @@ func (L *LRUCache[K, V]) Clear() {
 	L.keys = make([]K, 0)
 }
 
-func (L *LRUCache[K, V]) Range(f func(K, V) bool) {
-	// TODO: implement
+func (L *LRUCache[K, V]) Range(fn func(K, V) bool) {
+	for k, v := range L.data {
+		if !fn(k, v) {
+			break
+		}
+	}
 }
 
 func (L *LRUCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
