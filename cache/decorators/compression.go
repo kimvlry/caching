@@ -8,18 +8,29 @@ import (
 	"io"
 )
 
-type CompressionDecorator[K comparable, V any] struct {
+type Serializer[V any] interface {
+	Marshal(V) ([]byte, error)
+	Unmarshal([]byte) (V, error)
+}
+
+type compressionDecorator[K comparable, V any] struct {
 	cacheWrappee   cache.Cache[K, []byte]
+	serializerWrap Serializer[V]
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-func WithCompression[K comparable, V any](wrappee cache.Cache[K, []byte]) *CompressionDecorator[K, V] {
-	return &CompressionDecorator[K, V]{
-		cacheWrappee: wrappee,
+func WithCompression[K comparable, V any](
+	wrappee cache.Cache[K, []byte],
+	serializer Serializer[V],
+) cache.ObservableCache[K, V] {
+
+	return &compressionDecorator[K, V]{
+		cacheWrappee:   wrappee,
+		serializerWrap: serializer,
 	}
 }
 
-func (w *CompressionDecorator[K, V]) Get(key K) (V, error) {
+func (w *compressionDecorator[K, V]) Get(key K) (V, error) {
 	compressed, err := w.cacheWrappee.Get(key)
 	if err != nil {
 		var zero V
@@ -40,7 +51,7 @@ func (w *CompressionDecorator[K, V]) Get(key K) (V, error) {
 	return v, nil
 }
 
-func (w *CompressionDecorator[K, V]) Set(key K, value V) error {
+func (w *compressionDecorator[K, V]) Set(key K, value V) error {
 	rawBytes, err := json.Marshal(value)
 	if err != nil {
 		return err
@@ -64,11 +75,11 @@ func (w *CompressionDecorator[K, V]) Set(key K, value V) error {
 	return w.cacheWrappee.Set(key, compressedBytes)
 }
 
-func (w *CompressionDecorator[K, V]) Delete(key K) error {
+func (w *compressionDecorator[K, V]) Delete(key K) error {
 	return w.cacheWrappee.Delete(key)
 }
 
-func (w *CompressionDecorator[K, V]) Clear() {
+func (w *compressionDecorator[K, V]) Clear() {
 	w.cacheWrappee.Clear()
 }
 
@@ -96,11 +107,11 @@ func decompressRaw(data []byte) (b []byte, err error) {
 	return io.ReadAll(gr)
 }
 
-func (w *CompressionDecorator[K, V]) OnEvent(callback func(cache.Event[K, V])) {
+func (w *compressionDecorator[K, V]) OnEvent(callback func(cache.Event[K, V])) {
 	w.eventCallbacks = append(w.eventCallbacks, callback)
 }
 
-func (w *CompressionDecorator[K, V]) emit(event cache.Event[K, V]) {
+func (w *compressionDecorator[K, V]) emit(event cache.Event[K, V]) {
 	for _, callback := range w.eventCallbacks {
 		callback(event)
 	}

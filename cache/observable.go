@@ -1,6 +1,7 @@
 package cache
 
 type ObservableCache[K comparable, V any] interface {
+	Cache[K, V]
 	OnEvent(callback func(event Event[K, V]))
 }
 

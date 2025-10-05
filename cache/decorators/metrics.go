@@ -18,11 +18,19 @@ type MetricsDecorator[K comparable, V any] struct {
 	compressedBytesNum atomic.Int64
 }
 
-func WithMetrics[K comparable, V any](wrappee cache.Cache[K, V]) *MetricsDecorator[K, V] {
+type AwareCache[K comparable, V any] interface {
+	cache.Cache[K, V]
+	HitRate() float64
+	GetHits() int64
+	GetMisses() int64
+	GetEvictions() int64
+}
+
+func WithMetrics[K comparable, V any](wrappee cache.Cache[K, V]) AwareCache[K, V] {
 	decorator := &MetricsDecorator[K, V]{
 		cacheWrappee: wrappee,
 	}
-	if observable, ok := wrappee.(cache.ObservableCache[K, V]); ok {
+	if observable, ok := any(wrappee).(cache.ObservableCache[K, V]); ok {
 		observable.OnEvent(func(event cache.Event[K, V]) {
 			switch event.Type {
 			case cache.EventTypeEviction:
@@ -46,15 +54,6 @@ func (m *MetricsDecorator[K, V]) HitRate() float64 {
 		return 0.0
 	}
 	return float64(hits) / float64(total)
-}
-
-func (m *MetricsDecorator[K, V]) CompressionRate() float64 {
-	raw := m.rawBytesNum.Load()
-	compressed := m.compressedBytesNum.Load()
-	if raw == 0.0 {
-		return 0.0
-	}
-	return float64(compressed) / float64(raw)
 }
 
 func (m *MetricsDecorator[K, V]) GetHits() int64 {

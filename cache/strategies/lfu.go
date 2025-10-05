@@ -16,7 +16,7 @@ type lfuCache[K comparable, V any] struct {
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-func NewLFUCache[K comparable, V any](capacity int) cache.Cache[K, V] {
+func NewLFUCache[K comparable, V any](capacity int) cache.IterableCache[K, V] {
 	return &lfuCache[K, V]{
 		capacity: capacity,
 		data:     make(map[K]*heap_item.MinHeapItem[K, V], capacity),

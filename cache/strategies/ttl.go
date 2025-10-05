@@ -22,7 +22,7 @@ type ttlCache[K comparable, V any] struct {
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-func NewTTLCache[K comparable, V any](capacity int, ttl time.Duration) cache.Cache[K, V] {
+func NewTTLCache[K comparable, V any](capacity int, ttl time.Duration) cache.IterableCache[K, V] {
 	return &ttlCache[K, V]{
 		capacity: capacity,
 		ttl:      ttl,
