@@ -15,7 +15,7 @@ func TestLoggingDecorator_Get(t *testing.T) {
 	}))
 
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 42)
+	_ = baseCache.Set("key1", 42)
 
 	loggingCache := WithDebugLogging(baseCache, logger)
 
@@ -98,7 +98,7 @@ func TestLoggingDecorator_Delete(t *testing.T) {
 	}))
 
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 42)
+	_ = baseCache.Set("key1", 42)
 
 	loggingCache := WithDebugLogging(baseCache, logger)
 	buf.Reset()
@@ -146,8 +146,8 @@ func TestLoggingDecorator_Clear(t *testing.T) {
 	}))
 
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 1)
-	baseCache.Set("key2", 2)
+	_ = baseCache.Set("key1", 1)
+	_ = baseCache.Set("key2", 2)
 
 	loggingCache := WithDebugLogging(baseCache, logger)
 	buf.Reset()
@@ -173,7 +173,7 @@ func TestLoggingDecorator_CacheTypeInLog(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
 	loggingCache := WithDebugLogging(baseCache, logger)
 
-	loggingCache.Get("key1")
+	_, _ = loggingCache.Get("key1")
 
 	logOutput := buf.String()
 	if !strings.Contains(logOutput, "cache=") {
@@ -190,8 +190,8 @@ func TestLoggingDecorator_LogLevelDebug(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
 	loggingCache := WithDebugLogging(baseCache, logger)
 
-	loggingCache.Set("key1", 42)
-	loggingCache.Get("key1")
+	_ = loggingCache.Set("key1", 42)
+	_, _ = loggingCache.Get("key1")
 
 	logOutput := buf.String()
 	debugCount := strings.Count(logOutput, "level=DEBUG")
@@ -209,8 +209,8 @@ func TestLoggingDecorator_LogLevelWarn(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
 	loggingCache := WithDebugLogging(baseCache, logger)
 
-	loggingCache.Get("nonexistent")
-	loggingCache.Set("key1", 42)
+	_, _ = loggingCache.Get("nonexistent")
+	_ = loggingCache.Set("key1", 42)
 
 	logOutput := buf.String()
 	if !strings.Contains(logOutput, "level=WARN") {
@@ -230,11 +230,11 @@ func TestLoggingDecorator_MultipleOperations(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
 	loggingCache := WithDebugLogging(baseCache, logger)
 
-	loggingCache.Set("key1", 1)
-	loggingCache.Set("key2", 2)
-	loggingCache.Get("key1")
-	loggingCache.Get("key2")
-	loggingCache.Delete("key1")
+	_ = loggingCache.Set("key1", 1)
+	_ = loggingCache.Set("key2", 2)
+	_, _ = loggingCache.Get("key1")
+	_, _ = loggingCache.Get("key2")
+	_ = loggingCache.Delete("key1")
 
 	logOutput := buf.String()
 
@@ -264,9 +264,9 @@ func TestLoggingDecorator_CompositionWithMetrics(t *testing.T) {
 	metricsCache := WithMetrics(baseCache)
 	loggingCache := WithDebugLogging(metricsCache, logger)
 
-	loggingCache.Set("key1", 42)
-	loggingCache.Get("key1")
-	loggingCache.Get("nonexistent")
+	_ = loggingCache.Set("key1", 42)
+	_, _ = loggingCache.Get("key1")
+	_, _ = loggingCache.Get("nonexistent")
 
 	logOutput := buf.String()
 	if !strings.Contains(logOutput, "Get method called") {

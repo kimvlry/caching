@@ -11,9 +11,9 @@ import (
 
 func TestWithMap_BasicMapping(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("a", 1)
-	baseCache.Set("b", 2)
-	baseCache.Set("c", 3)
+	_ = baseCache.Set("a", 1)
+	_ = baseCache.Set("b", 2)
+	_ = baseCache.Set("c", 3)
 
 	mapped := WithMap[string, int](
 		baseCache,
@@ -43,9 +43,9 @@ func TestWithMap_BasicMapping(t *testing.T) {
 
 func TestWithMap_StringTransformation(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, string](10)
-	baseCache.Set("key1", "hello")
-	baseCache.Set("key2", "world")
-	baseCache.Set("key3", "test")
+	_ = baseCache.Set("key1", "hello")
+	_ = baseCache.Set("key2", "world")
+	_ = baseCache.Set("key3", "test")
 
 	mapped := WithMap[string, string](
 		baseCache,
@@ -80,8 +80,8 @@ func TestWithMap_ComplexTransformation(t *testing.T) {
 	}
 
 	baseCache := strategies.NewLRUCache[string, Product](10)
-	baseCache.Set("p1", Product{Name: "Laptop", Price: 1000})
-	baseCache.Set("p2", Product{Name: "Mouse", Price: 20})
+	_ = baseCache.Set("p1", Product{Name: "Laptop", Price: 1000})
+	_ = baseCache.Set("p2", Product{Name: "Mouse", Price: 20})
 
 	mapped := WithMap[string, Product](
 		baseCache,
@@ -112,8 +112,8 @@ func TestWithMap_ComplexTransformation(t *testing.T) {
 
 func TestWithMap_ImmutabilitySourceCache(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 5)
-	baseCache.Set("key2", 10)
+	_ = baseCache.Set("key1", 5)
+	_ = baseCache.Set("key2", 10)
 
 	_ = WithMap[string, int](
 		baseCache,
@@ -133,9 +133,9 @@ func TestWithMap_ImmutabilitySourceCache(t *testing.T) {
 
 func TestWithMap_Range(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("a", 1)
-	baseCache.Set("b", 2)
-	baseCache.Set("c", 3)
+	_ = baseCache.Set("a", 1)
+	_ = baseCache.Set("b", 2)
+	_ = baseCache.Set("c", 3)
 
 	mapped := WithMap[string, int](
 		baseCache,
@@ -167,7 +167,7 @@ func TestWithMap_Range(t *testing.T) {
 
 func TestWithMap_ChainedMappers(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("num", 10)
+	_ = baseCache.Set("num", 10)
 
 	mapped := WithMap[string, int](
 		WithMap[string, int](
@@ -229,7 +229,7 @@ func TestWithMap_SetStoresOriginalValue(t *testing.T) {
 func TestWithMap_WithFilter(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
 	for i := 1; i <= 10; i++ {
-		baseCache.Set(string(rune('a'+i-1)), i)
+		_ = baseCache.Set(string(rune('a'+i-1)), i)
 	}
 
 	composed := WithMap[string, int](
@@ -268,9 +268,9 @@ func TestWithMap_WithFilter(t *testing.T) {
 
 func TestWithMap_Snapshot(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("a", 1)
-	baseCache.Set("b", 2)
-	baseCache.Set("c", 3)
+	_ = baseCache.Set("a", 1)
+	_ = baseCache.Set("b", 2)
+	_ = baseCache.Set("c", 3)
 
 	mapped := WithMap[string, int](
 		baseCache,
@@ -304,7 +304,7 @@ func TestWithMap_Snapshot(t *testing.T) {
 		}
 	}
 
-	baseCache.Set("a", 999)
+	_ = baseCache.Set("a", 999)
 	val, _ := snapshot.Get("a")
 	if val != 10 {
 		t.Error("Snapshot should be independent of source cache")

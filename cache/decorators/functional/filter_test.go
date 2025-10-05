@@ -12,10 +12,10 @@ import (
 
 func TestWithFilter_BasicFiltering(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 5)
-	baseCache.Set("key2", 15)
-	baseCache.Set("key3", 25)
-	baseCache.Set("key4", 10)
+	_ = baseCache.Set("key1", 5)
+	_ = baseCache.Set("key2", 15)
+	_ = baseCache.Set("key3", 25)
+	_ = baseCache.Set("key4", 10)
 
 	filtered := WithFilter(
 		baseCache,
@@ -43,9 +43,9 @@ func TestWithFilter_BasicFiltering(t *testing.T) {
 
 func TestWithFilter_FilterAll(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 1)
-	baseCache.Set("key2", 2)
-	baseCache.Set("key3", 3)
+	_ = baseCache.Set("key1", 1)
+	_ = baseCache.Set("key2", 2)
+	_ = baseCache.Set("key3", 3)
 
 	filtered := WithFilter(
 		baseCache,
@@ -61,9 +61,9 @@ func TestWithFilter_FilterAll(t *testing.T) {
 
 func TestWithFilter_FilterNone(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 1)
-	baseCache.Set("key2", 2)
-	baseCache.Set("key3", 3)
+	_ = baseCache.Set("key1", 1)
+	_ = baseCache.Set("key2", 2)
+	_ = baseCache.Set("key3", 3)
 
 	filtered := WithFilter(
 		baseCache,
@@ -107,9 +107,9 @@ func TestWithFilter_EmptyCache(t *testing.T) {
 
 func TestWithFilter_ImmutabilitySourceCache(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 5)
-	baseCache.Set("key2", 15)
-	baseCache.Set("key3", 25)
+	_ = baseCache.Set("key1", 5)
+	_ = baseCache.Set("key2", 15)
+	_ = baseCache.Set("key3", 25)
 
 	val1, err1 := baseCache.Get("key1")
 	if err1 != nil || val1 != 5 {
@@ -136,10 +136,10 @@ func TestWithFilter_ComplexPredicate(t *testing.T) {
 	}
 
 	productCache := strategies.NewLRUCache[string, Product](10)
-	productCache.Set("p1", Product{ID: 1, Name: "Laptop", Price: 1000, InStock: true})
-	productCache.Set("p2", Product{ID: 2, Name: "Mouse", Price: 20, InStock: false})
-	productCache.Set("p3", Product{ID: 3, Name: "Keyboard", Price: 75, InStock: true})
-	productCache.Set("p4", Product{ID: 4, Name: "Monitor", Price: 300, InStock: true})
+	_ = productCache.Set("p1", Product{ID: 1, Name: "Laptop", Price: 1000, InStock: true})
+	_ = productCache.Set("p2", Product{ID: 2, Name: "Mouse", Price: 20, InStock: false})
+	_ = productCache.Set("p3", Product{ID: 3, Name: "Keyboard", Price: 75, InStock: true})
+	_ = productCache.Set("p4", Product{ID: 4, Name: "Monitor", Price: 300, InStock: true})
 
 	filtered := WithFilter(
 		productCache,
@@ -172,7 +172,7 @@ func TestWithFilter_ComplexPredicate(t *testing.T) {
 func TestWithFilter_ChainedFilters(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](100)
 	for i := 1; i <= 100; i++ {
-		baseCache.Set(fmt.Sprintf("num%d", i), i)
+		_ = baseCache.Set(fmt.Sprintf("num%d", i), i)
 	}
 
 	finalFilter := WithFilter(
@@ -211,9 +211,9 @@ func TestWithFilter_ChainedFilters(t *testing.T) {
 
 func TestWithFilter_DifferentCacheTypes(t *testing.T) {
 	lruCache := strategies.NewLRUCache[string, int](10)
-	lruCache.Set("a", 1)
-	lruCache.Set("b", 2)
-	lruCache.Set("c", 3)
+	_ = lruCache.Set("a", 1)
+	_ = lruCache.Set("b", 2)
+	_ = lruCache.Set("c", 3)
 
 	filtered := WithFilter(
 		lruCache,
@@ -237,10 +237,10 @@ func TestWithFilter_DifferentCacheTypes(t *testing.T) {
 
 func TestWithFilter_StringFiltering(t *testing.T) {
 	stringCache := strategies.NewLRUCache[string, string](10)
-	stringCache.Set("user:1", "alice@example.com")
-	stringCache.Set("user:2", "bob@gmail.com")
-	stringCache.Set("user:3", "charlie@example.com")
-	stringCache.Set("user:4", "david@yahoo.com")
+	_ = stringCache.Set("user:1", "alice@example.com")
+	_ = stringCache.Set("user:2", "bob@gmail.com")
+	_ = stringCache.Set("user:3", "charlie@example.com")
+	_ = stringCache.Set("user:4", "david@yahoo.com")
 
 	filtered := WithFilter(
 		stringCache,
@@ -272,7 +272,7 @@ func TestWithFilter_StringFiltering(t *testing.T) {
 func TestWithFilter_LargeDataset(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10000)
 	for i := 0; i < 10000; i++ {
-		baseCache.Set(fmt.Sprintf("key%d", i), i)
+		_ = baseCache.Set(fmt.Sprintf("key%d", i), i)
 	}
 
 	filtered := WithFilter(
@@ -298,11 +298,11 @@ func TestWithFilter_LargeDataset(t *testing.T) {
 
 func TestWithFilter_Range(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("a", 1)
-	baseCache.Set("b", 2)
-	baseCache.Set("c", 3)
-	baseCache.Set("d", 4)
-	baseCache.Set("e", 5)
+	_ = baseCache.Set("a", 1)
+	_ = baseCache.Set("b", 2)
+	_ = baseCache.Set("c", 3)
+	_ = baseCache.Set("d", 4)
+	_ = baseCache.Set("e", 5)
 
 	filtered := WithFilter(
 		baseCache,
@@ -357,7 +357,7 @@ func TestWithFilter_SetRejectsFilteredValues(t *testing.T) {
 func TestSnapshot_MaterializesFilteredCache(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
 	for i := 1; i <= 10; i++ {
-		baseCache.Set(fmt.Sprintf("key%d", i), i)
+		_ = baseCache.Set(fmt.Sprintf("key%d", i), i)
 	}
 
 	filtered := WithFilter(
@@ -391,7 +391,7 @@ func TestSnapshot_MaterializesFilteredCache(t *testing.T) {
 		}
 	}
 
-	baseCache.Set("key6", 100)
+	_ = baseCache.Set("key6", 100)
 	val, _ := snapshot.Get("key6")
 	if val != 6 {
 		t.Error("Snapshot should be independent of source cache")

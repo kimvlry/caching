@@ -72,7 +72,7 @@ func TestCompressionDecorator_Delete(t *testing.T) {
 	compCache := WithCompression(baseCache, JSONSerializer[TestData]{})
 
 	testData := TestData{ID: 1, Name: "Test"}
-	compCache.Set("key1", testData)
+	_ = compCache.Set("key1", testData)
 
 	err := compCache.Delete("key1")
 	if err != nil {
@@ -90,9 +90,9 @@ func TestCompressionDecorator_Clear(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, []byte](10)
 	compCache := WithCompression(baseCache, JSONSerializer[TestData]{})
 
-	compCache.Set("key1", TestData{ID: 1, Name: "Test1"})
-	compCache.Set("key2", TestData{ID: 2, Name: "Test2"})
-	compCache.Set("key3", TestData{ID: 3, Name: "Test3"})
+	_ = compCache.Set("key1", TestData{ID: 1, Name: "Test1"})
+	_ = compCache.Set("key2", TestData{ID: 2, Name: "Test2"})
+	_ = compCache.Set("key3", TestData{ID: 3, Name: "Test3"})
 
 	compCache.Clear()
 
@@ -180,7 +180,7 @@ func TestCompressionDecorator_CompressionActuallyWorks(t *testing.T) {
 
 func TestCompressionDecorator_InvalidJSON(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, []byte](10)
-	baseCache.Set("invalid", []byte("not compressed data"))
+	_ = baseCache.Set("invalid", []byte("not compressed data"))
 	compCache := WithCompression(baseCache, JSONSerializer[TestData]{})
 
 	_, err := compCache.Get("invalid")

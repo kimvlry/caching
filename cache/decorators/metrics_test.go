@@ -7,16 +7,16 @@ import (
 
 func TestMetricsDecorator_HitsAndMisses(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 100)
-	baseCache.Set("key2", 200)
+	_ = baseCache.Set("key1", 100)
+	_ = baseCache.Set("key2", 200)
 
 	metricsCache := WithMetrics(baseCache)
 
-	metricsCache.Get("key1")             // hit
-	metricsCache.Get("key2")             // hit
-	metricsCache.Get("key1")             // hit
-	metricsCache.Get("nonexistent")      // miss
-	metricsCache.Get("also_nonexistent") // miss
+	_, _ = metricsCache.Get("key1")             // hit
+	_, _ = metricsCache.Get("key2")             // hit
+	_, _ = metricsCache.Get("key1")             // hit
+	_, _ = metricsCache.Get("nonexistent")      // miss
+	_, _ = metricsCache.Get("also_nonexistent") // miss
 
 	if hits := metricsCache.GetHits(); hits != 3 {
 		t.Errorf("Expected 3 hits, got %d", hits)
@@ -28,14 +28,14 @@ func TestMetricsDecorator_HitsAndMisses(t *testing.T) {
 
 func TestMetricsDecorator_HitRate(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 100)
+	_ = baseCache.Set("key1", 100)
 
 	metricsCache := WithMetrics(baseCache)
 
-	metricsCache.Get("key1")        // hit
-	metricsCache.Get("key1")        // hit
-	metricsCache.Get("key1")        // hit
-	metricsCache.Get("nonexistent") // miss
+	_, _ = metricsCache.Get("key1")        // hit
+	_, _ = metricsCache.Get("key1")        // hit
+	_, _ = metricsCache.Get("key1")        // hit
+	_, _ = metricsCache.Get("nonexistent") // miss
 
 	expectedHitRate := 0.75 // 3 hits / 4 total = 75%
 	hitRate := metricsCache.HitRate()
@@ -59,14 +59,14 @@ func TestMetricsDecorator_Evictions_ObservableCache(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](3)
 	metricsCache := WithMetrics(baseCache)
 
-	metricsCache.Set("key1", 1)
-	metricsCache.Set("key2", 2)
-	metricsCache.Set("key3", 3)
+	_ = metricsCache.Set("key1", 1)
+	_ = metricsCache.Set("key2", 2)
+	_ = metricsCache.Set("key3", 3)
 
 	initialEvictions := metricsCache.GetEvictions()
 
-	metricsCache.Set("key4", 4)
-	metricsCache.Set("key5", 5)
+	_ = metricsCache.Set("key4", 4)
+	_ = metricsCache.Set("key5", 5)
 
 	finalEvictions := metricsCache.GetEvictions()
 	evicted := finalEvictions - initialEvictions
@@ -80,10 +80,10 @@ func TestMetricsDecorator_Evictions_NonObservableCache(t *testing.T) {
 	baseCache := strategies.NewFIFOCache[string, int](3)
 	metricsCache := WithMetrics(baseCache)
 
-	metricsCache.Set("key1", 1)
-	metricsCache.Set("key2", 2)
-	metricsCache.Set("key3", 3)
-	metricsCache.Set("key4", 4)
+	_ = metricsCache.Set("key1", 1)
+	_ = metricsCache.Set("key2", 2)
+	_ = metricsCache.Set("key3", 3)
+	_ = metricsCache.Set("key4", 4)
 
 	evictions := metricsCache.GetEvictions()
 	if evictions != 0 {
@@ -93,7 +93,7 @@ func TestMetricsDecorator_Evictions_NonObservableCache(t *testing.T) {
 
 func TestMetricsDecorator_DeleteTracking(t *testing.T) {
 	baseCache := strategies.NewLRUCache[string, int](10)
-	baseCache.Set("key1", 100)
+	_ = baseCache.Set("key1", 100)
 
 	metricsCache := WithMetrics(baseCache)
 
@@ -109,7 +109,7 @@ func TestMetricsDecorator_DeleteTracking(t *testing.T) {
 	}
 
 	initialMisses := metricsCache.GetMisses()
-	metricsCache.Delete("nonexistent")
+	_ = metricsCache.Delete("nonexistent")
 
 	if metricsCache.GetMisses() <= initialMisses {
 		t.Error("Delete of non-existent key should increment misses")
