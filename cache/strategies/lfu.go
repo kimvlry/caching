@@ -8,7 +8,7 @@ import (
 	"github.com/kimvlry/caching/cache/strategies/priority_heap/heap_item"
 )
 
-type LFUCache[K comparable, V any] struct {
+type lfuCache[K comparable, V any] struct {
 	capacity int
 	data     map[K]*heap_item.MinHeapItem[K, V]
 	keys     *priority_heap.MinHeap[K, V]
@@ -16,36 +16,36 @@ type LFUCache[K comparable, V any] struct {
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-func NewLFUCache[K comparable, V any](capacity int) *LFUCache[K, V] {
-	return &LFUCache[K, V]{
+func NewLFUCache[K comparable, V any](capacity int) cache.Cache[K, V] {
+	return &lfuCache[K, V]{
 		capacity: capacity,
 		data:     make(map[K]*heap_item.MinHeapItem[K, V], capacity),
 		keys:     priority_heap.NewMinHeap[K, V](),
 	}
 }
 
-func (L *LFUCache[K, V]) Get(key K) (V, error) {
-	item, exists := L.data[key]
+func (l *lfuCache[K, V]) Get(key K) (V, error) {
+	item, exists := l.data[key]
 	if !exists {
 		var zero V
 		return zero, common.ErrKeyNotFound
 	}
-	L.keys.Update(item, item.GetPriority()+1)
+	l.keys.Update(item, item.GetPriority()+1)
 	return item.Value, nil
 }
 
-func (L *LFUCache[K, V]) Set(key K, value V) error {
-	if item, exists := L.data[key]; exists {
+func (l *lfuCache[K, V]) Set(key K, value V) error {
+	if item, exists := l.data[key]; exists {
 		item.Value = value
-		L.keys.Update(item, item.GetPriority()+1)
+		l.keys.Update(item, item.GetPriority()+1)
 		return nil
 	}
 
-	if len(L.data) >= L.capacity {
-		evicted := heap.Pop(L.keys).(*heap_item.MinHeapItem[K, V])
-		delete(L.data, evicted.Key)
+	if len(l.data) >= l.capacity {
+		evicted := heap.Pop(l.keys).(*heap_item.MinHeapItem[K, V])
+		delete(l.data, evicted.Key)
 
-		L.emit(cache.Event[K, V]{
+		l.emit(cache.Event[K, V]{
 			Type:  cache.EventTypeEviction,
 			Key:   evicted.Key,
 			Value: evicted.Value,
@@ -53,38 +53,38 @@ func (L *LFUCache[K, V]) Set(key K, value V) error {
 	}
 
 	item := heap_item.NewPriorityHeapItem(key, value, 1)
-	L.data[key] = item
-	heap.Push(L.keys, item)
+	l.data[key] = item
+	heap.Push(l.keys, item)
 	return nil
 }
 
-func (L *LFUCache[K, V]) Delete(key K) error {
-	item, exists := L.data[key]
+func (l *lfuCache[K, V]) Delete(key K) error {
+	item, exists := l.data[key]
 	if !exists {
 		return common.ErrKeyNotFound
 	}
-	heap.Remove(L.keys, item.GetIndex())
-	delete(L.data, key)
+	heap.Remove(l.keys, item.GetIndex())
+	delete(l.data, key)
 	return nil
 }
 
-func (L *LFUCache[K, V]) Clear() {
-	L.data = make(map[K]*heap_item.MinHeapItem[K, V])
-	L.keys = priority_heap.NewMinHeap[K, V]()
+func (l *lfuCache[K, V]) Clear() {
+	l.data = make(map[K]*heap_item.MinHeapItem[K, V])
+	l.keys = priority_heap.NewMinHeap[K, V]()
 }
 
-func (L *LFUCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
-	L.eventCallbacks = append(L.eventCallbacks, callback)
+func (l *lfuCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
+	l.eventCallbacks = append(l.eventCallbacks, callback)
 }
 
-func (L *LFUCache[K, V]) emit(event cache.Event[K, V]) {
-	for _, callback := range L.eventCallbacks {
+func (l *lfuCache[K, V]) emit(event cache.Event[K, V]) {
+	for _, callback := range l.eventCallbacks {
 		callback(event)
 	}
 }
 
-func (L *LFUCache[K, V]) Range(fn func(K, V) bool) {
-	for k, v := range L.data {
+func (l *lfuCache[K, V]) Range(fn func(K, V) bool) {
+	for k, v := range l.data {
 		if !fn(k, v.Value) {
 			break
 		}

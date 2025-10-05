@@ -12,7 +12,7 @@ import (
 
 // TODO: set individual ttl for each item
 
-type TTLCache[K comparable, V any] struct {
+type ttlCache[K comparable, V any] struct {
 	capacity int
 	ttl      time.Duration
 	data     map[K]*heap_item.TTLHeapItem[K, V]
@@ -22,8 +22,8 @@ type TTLCache[K comparable, V any] struct {
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-func NewTTLCache[K comparable, V any](capacity int, ttl time.Duration) *TTLCache[K, V] {
-	return &TTLCache[K, V]{
+func NewTTLCache[K comparable, V any](capacity int, ttl time.Duration) cache.Cache[K, V] {
+	return &ttlCache[K, V]{
 		capacity: capacity,
 		ttl:      ttl,
 		data:     make(map[K]*heap_item.TTLHeapItem[K, V], capacity),
@@ -31,47 +31,47 @@ func NewTTLCache[K comparable, V any](capacity int, ttl time.Duration) *TTLCache
 	}
 }
 
-func (T *TTLCache[K, V]) Set(key K, value V) error {
-	T.mutex.Lock()
-	defer T.mutex.Unlock()
+func (t *ttlCache[K, V]) Set(key K, value V) error {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 
-	if item, exists := T.data[key]; exists {
+	if item, exists := t.data[key]; exists {
 		item.Value = value
-		item.SetPriority(int(time.Now().Add(T.ttl).UnixNano()))
-		heap.Fix(T.keys, item.GetIndex())
+		item.SetPriority(int(time.Now().Add(t.ttl).UnixNano()))
+		heap.Fix(t.keys, item.GetIndex())
 		return nil
 	}
 
-	if len(T.data) >= T.capacity {
-		evicted := heap.Pop(T.keys).(*heap_item.TTLHeapItem[K, V])
-		delete(T.data, evicted.Key)
+	if len(t.data) >= t.capacity {
+		evicted := heap.Pop(t.keys).(*heap_item.TTLHeapItem[K, V])
+		delete(t.data, evicted.Key)
 
-		T.emit(cache.Event[K, V]{
+		t.emit(cache.Event[K, V]{
 			Type:  cache.EventTypeEviction,
 			Key:   evicted.Key,
 			Value: evicted.Value,
 		})
 	}
 
-	item := heap_item.NewTTLHeapItem(key, value, T.ttl)
-	T.data[key] = item
-	heap.Push(T.keys, item)
+	item := heap_item.NewTTLHeapItem(key, value, t.ttl)
+	t.data[key] = item
+	heap.Push(t.keys, item)
 	return nil
 }
 
-func (T *TTLCache[K, V]) Get(key K) (V, error) {
-	T.mutex.Lock()
-	defer T.mutex.Unlock()
+func (t *ttlCache[K, V]) Get(key K) (V, error) {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
 
-	item, exists := T.data[key]
+	item, exists := t.data[key]
 	if !exists {
 		var zero V
 		return zero, common.ErrKeyNotFound
 	}
 
 	if time.Now().After(item.ExpiresAt) {
-		heap.Remove(T.keys, item.GetIndex())
-		delete(T.data, key)
+		heap.Remove(t.keys, item.GetIndex())
+		delete(t.data, key)
 		var zero V
 		return zero, common.ErrKeyNotFound
 	}
@@ -79,50 +79,50 @@ func (T *TTLCache[K, V]) Get(key K) (V, error) {
 	return item.Value, nil
 }
 
-func (T *TTLCache[K, V]) Delete(key K) error {
-	T.mutex.Lock()
-	defer T.mutex.Unlock()
-	item, exists := T.data[key]
+func (t *ttlCache[K, V]) Delete(key K) error {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	item, exists := t.data[key]
 	if !exists {
 		return common.ErrKeyNotFound
 	}
-	heap.Remove(T.keys, item.GetIndex())
-	delete(T.data, key)
+	heap.Remove(t.keys, item.GetIndex())
+	delete(t.data, key)
 	return nil
 }
 
-func (T *TTLCache[K, V]) Clear() {
-	T.mutex.Lock()
-	defer T.mutex.Unlock()
-	T.data = make(map[K]*heap_item.TTLHeapItem[K, V])
-	T.keys = priority_heap.NewMinHeap[K, V]()
+func (t *ttlCache[K, V]) Clear() {
+	t.mutex.Lock()
+	defer t.mutex.Unlock()
+	t.data = make(map[K]*heap_item.TTLHeapItem[K, V])
+	t.keys = priority_heap.NewMinHeap[K, V]()
 }
 
-func (L *TTLCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
-	L.eventCallbacks = append(L.eventCallbacks, callback)
+func (t *ttlCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
+	t.eventCallbacks = append(t.eventCallbacks, callback)
 }
 
-func (L *TTLCache[K, V]) emit(event cache.Event[K, V]) {
-	for _, callback := range L.eventCallbacks {
+func (t *ttlCache[K, V]) emit(event cache.Event[K, V]) {
+	for _, callback := range t.eventCallbacks {
 		callback(event)
 	}
 }
 
-func (T *TTLCache[K, V]) Range(f func(K, V) bool) {
-	for k, v := range T.data {
+func (t *ttlCache[K, V]) Range(f func(K, V) bool) {
+	for k, v := range t.data {
 		if !f(k, v.Value) {
 			break
 		}
 	}
 }
 
-func (T *TTLCache[K, V]) StartEvictor(interval time.Duration) {
+func (t *ttlCache[K, V]) StartEvictor(interval time.Duration) {
 	go func() {
 		for {
 			time.Sleep(interval)
-			T.mutex.Lock()
+			t.mutex.Lock()
 			for {
-				top := T.keys.Peek()
+				top := t.keys.Peek()
 				if top == nil {
 					break
 				}
@@ -130,16 +130,16 @@ func (T *TTLCache[K, V]) StartEvictor(interval time.Duration) {
 				if time.Now().Before(item.ExpiresAt) {
 					break
 				}
-				heap.Pop(T.keys)
-				delete(T.data, item.Key)
+				heap.Pop(t.keys)
+				delete(t.data, item.Key)
 
-				T.emit(cache.Event[K, V]{
+				t.emit(cache.Event[K, V]{
 					Type:  cache.EventTypeEviction,
 					Key:   item.Key,
 					Value: item.Value,
 				})
 			}
-			T.mutex.Unlock()
+			t.mutex.Unlock()
 		}
 	}()
 }

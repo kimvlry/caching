@@ -5,8 +5,8 @@ import (
 	"github.com/kimvlry/caching/cache/strategies/common"
 )
 
-// LRUCache implements a Least Recently Used cache
-type LRUCache[K comparable, V any] struct {
+// lruCache implements a Least Recently Used cache
+type lruCache[K comparable, V any] struct {
 	capacity int
 	data     map[K]V
 	keys     []K
@@ -14,17 +14,17 @@ type LRUCache[K comparable, V any] struct {
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-func NewLRUCache[K comparable, V any](capacity int) *LRUCache[K, V] {
-	return &LRUCache[K, V]{
+func NewLRUCache[K comparable, V any](capacity int) cache.Cache[K, V] {
+	return &lruCache[K, V]{
 		capacity: capacity,
 		data:     make(map[K]V, capacity),
 		keys:     make([]K, 0, capacity),
 	}
 }
 
-func (L *LRUCache[K, V]) Get(key K) (V, error) {
-	if value, exists := L.data[key]; exists {
-		L.moveKeyToEnd(key)
+func (l *lruCache[K, V]) Get(key K) (V, error) {
+	if value, exists := l.data[key]; exists {
+		l.moveKeyToEnd(key)
 		return value, nil
 	}
 
@@ -32,75 +32,75 @@ func (L *LRUCache[K, V]) Get(key K) (V, error) {
 	return zero, common.ErrKeyNotFound
 }
 
-func (L *LRUCache[K, V]) Set(key K, value V) error {
-	if _, exists := L.data[key]; exists {
-		L.moveKeyToEnd(key)
-		L.data[key] = value
+func (l *lruCache[K, V]) Set(key K, value V) error {
+	if _, exists := l.data[key]; exists {
+		l.moveKeyToEnd(key)
+		l.data[key] = value
 		return nil
 	}
 
-	if len(L.data) >= L.capacity {
-		leastRecentKey := L.keys[0]
-		delete(L.data, leastRecentKey)
-		L.keys = L.keys[1:]
+	if len(l.data) >= l.capacity {
+		leastRecentKey := l.keys[0]
+		delete(l.data, leastRecentKey)
+		l.keys = l.keys[1:]
 
-		L.emit(cache.Event[K, V]{
+		l.emit(cache.Event[K, V]{
 			Type:  cache.EventTypeEviction,
 			Key:   leastRecentKey,
 			Value: value,
 		})
 	}
 
-	L.keys = append(L.keys, key)
-	L.data[key] = value
+	l.keys = append(l.keys, key)
+	l.data[key] = value
 	return nil
 }
 
-func (L *LRUCache[K, V]) Delete(key K) error {
-	if _, exists := L.data[key]; !exists {
+func (l *lruCache[K, V]) Delete(key K) error {
+	if _, exists := l.data[key]; !exists {
 		return common.ErrKeyNotFound
 	}
 
-	delete(L.data, key)
+	delete(l.data, key)
 
-	for i, k := range L.keys {
+	for i, k := range l.keys {
 		if k == key {
-			L.keys = append(L.keys[:i], L.keys[i+1:]...)
+			l.keys = append(l.keys[:i], l.keys[i+1:]...)
 			break
 		}
 	}
 	return nil
 }
 
-func (L *LRUCache[K, V]) Clear() {
-	L.data = make(map[K]V, L.capacity)
-	L.keys = make([]K, 0)
+func (l *lruCache[K, V]) Clear() {
+	l.data = make(map[K]V, l.capacity)
+	l.keys = make([]K, 0)
 }
 
-func (L *LRUCache[K, V]) Range(fn func(K, V) bool) {
-	for k, v := range L.data {
+func (l *lruCache[K, V]) Range(fn func(K, V) bool) {
+	for k, v := range l.data {
 		if !fn(k, v) {
 			break
 		}
 	}
 }
 
-func (L *LRUCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
-	L.eventCallbacks = append(L.eventCallbacks, callback)
+func (l *lruCache[K, V]) OnEvent(callback func(event cache.Event[K, V])) {
+	l.eventCallbacks = append(l.eventCallbacks, callback)
 }
 
-func (L *LRUCache[K, V]) emit(event cache.Event[K, V]) {
-	for _, callback := range L.eventCallbacks {
+func (l *lruCache[K, V]) emit(event cache.Event[K, V]) {
+	for _, callback := range l.eventCallbacks {
 		callback(event)
 	}
 }
 
-func (L *LRUCache[K, V]) moveKeyToEnd(key K) {
-	for i, k := range L.keys {
+func (l *lruCache[K, V]) moveKeyToEnd(key K) {
+	for i, k := range l.keys {
 		if k == key {
-			L.keys = append(L.keys[:i], L.keys[i+1:]...)
+			l.keys = append(l.keys[:i], l.keys[i+1:]...)
 			break
 		}
 	}
-	L.keys = append(L.keys, key)
+	l.keys = append(l.keys, key)
 }
