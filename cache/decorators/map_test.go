@@ -1,4 +1,4 @@
-package functional
+package decorators
 
 import (
 	"github.com/kimvlry/caching/cache/decorators/common"

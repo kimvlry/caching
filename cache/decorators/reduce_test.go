@@ -1,4 +1,4 @@
-package functional
+package decorators
 
 import (
 	"fmt"
