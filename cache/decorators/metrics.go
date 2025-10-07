@@ -68,31 +68,31 @@ func (m *metricsDecorator[K, V]) GetEvictions() int64 {
 	return m.evicts.Load()
 }
 
-func (w *metricsDecorator[K, V]) Get(key K) (V, error) {
-	v, err := w.cacheWrappee.Get(key)
+func (m *metricsDecorator[K, V]) Get(key K) (V, error) {
+	v, err := m.cacheWrappee.Get(key)
 	if err == nil {
-		w.hits.Add(1)
+		m.hits.Add(1)
 	}
 	if errors.Is(err, common.ErrKeyNotFound) {
-		w.misses.Add(1)
+		m.misses.Add(1)
 	}
 	return v, err
 }
 
-func (w *metricsDecorator[K, V]) Set(key K, value V) error {
-	return w.cacheWrappee.Set(key, value)
+func (m *metricsDecorator[K, V]) Set(key K, value V) error {
+	return m.cacheWrappee.Set(key, value)
 }
 
-func (w *metricsDecorator[K, V]) Delete(key K) error {
-	err := w.cacheWrappee.Delete(key)
+func (m *metricsDecorator[K, V]) Delete(key K) error {
+	err := m.cacheWrappee.Delete(key)
 	if errors.Is(err, common.ErrKeyNotFound) {
-		w.misses.Add(1)
+		m.misses.Add(1)
 	}
 	return err
 }
 
-func (w *metricsDecorator[K, V]) Clear() {
-	w.cacheWrappee.Clear()
+func (m *metricsDecorator[K, V]) Clear() {
+	m.cacheWrappee.Clear()
 }
 
 func (m *metricsDecorator[K, V]) Range(fn func(K, V) bool) {
