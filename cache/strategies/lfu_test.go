@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestLFUCache tests the LFU cache implementation
+// TestLFUCache tests the NewLfuCache cache implementation
 func TestLFUCache(t *testing.T) {
-	c := strategies.NewLFUCache[string, int](3)
+	c := strategies.NewLfuCache[string, int](3)()
 
 	// Test basic operations
 	err := c.Set("a", 1)

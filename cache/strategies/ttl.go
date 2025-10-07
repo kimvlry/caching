@@ -12,7 +12,9 @@ import (
 
 type TTLCache[K comparable, V any] interface {
 	cache.Cache[K, V]
+	cache.IterableCache[K, V]
 	SetWithTTL(K, V, time.Duration) error
+	GetDefaultTTL() time.Duration
 }
 
 type ttlCache[K comparable, V any] struct {
@@ -27,15 +29,19 @@ type ttlCache[K comparable, V any] struct {
 	evictorOnce    sync.Once
 }
 
-func NewTTLCache[K comparable, V any](capacity int, defaultTTL time.Duration) cache.IterableCache[K, V] {
+func newTtlCache[K comparable, V any](capacity int, defaultTTL time.Duration) cache.IterableCache[K, V] {
 	c := &ttlCache[K, V]{
 		capacity:   capacity,
 		defaultTTL: defaultTTL,
 		data:       make(map[K]heap_item.Item[K, V], capacity),
 		keys:       priority_heap.NewMinHeap[K, V](),
 	}
-	c.StartEvictor(defaultTTL / 2)
+	c.startEvictor(defaultTTL / 2)
 	return c
+}
+
+func (t *ttlCache[K, V]) GetDefaultTTL() time.Duration {
+	return t.defaultTTL
 }
 
 func (t *ttlCache[K, V]) SetWithTTL(key K, value V, ttl time.Duration) error {
@@ -148,7 +154,7 @@ func (t *ttlCache[K, V]) Range(f func(K, V) bool) {
 	}
 }
 
-func (t *ttlCache[K, V]) StartEvictor(interval time.Duration) {
+func (t *ttlCache[K, V]) startEvictor(interval time.Duration) {
 	t.evictorOnce.Do(func() {
 		t.stopEvictor = make(chan struct{})
 		go func() {

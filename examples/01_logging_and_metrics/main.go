@@ -19,7 +19,7 @@ func main() {
 	metricsCache :=
 		decorators.WithDebugLogging(
 			decorators.WithMetrics(
-				strategies.NewLRUCache[string, int](5)),
+				strategies.NewLruCache[string, int](5)()),
 			logger,
 		)
 

@@ -33,7 +33,7 @@ var priceReducer = func(acc int, p Product) int {
 }
 
 func TestBloomFilter_BasicUsage(t *testing.T) {
-	base := strategies.NewLFUCache[string, int](10)
+	base := strategies.NewLfuCache[string, int](10)()
 	cacheWithBF := WithBloomFilter(base, 10, 0.01)
 
 	err := cacheWithBF.Set("a", 1)
@@ -48,7 +48,7 @@ func TestBloomFilter_BasicUsage(t *testing.T) {
 }
 
 func TestBloomFilter_Clear(t *testing.T) {
-	base := strategies.NewLFUCache[string, int](10)
+	base := strategies.NewLfuCache[string, int](10)()
 	cacheWithBF := WithBloomFilter(base, 10, 0.01)
 
 	_ = cacheWithBF.Set("x", 10)
@@ -61,7 +61,7 @@ func TestBloomFilter_Clear(t *testing.T) {
 }
 
 func TestBloomFilter_CombinedDecorators(t *testing.T) {
-	base := strategies.NewLFUCache[string, Product](10)
+	base := strategies.NewLfuCache[string, Product](10)()
 	_ = base.Set("p1", Product{Name: "Laptop", Price: 1000})
 	_ = base.Set("p2", Product{Name: "Mouse", Price: 20})
 	_ = base.Set("p3", Product{Name: "Monitor", Price: 300})
@@ -73,12 +73,12 @@ func TestBloomFilter_CombinedDecorators(t *testing.T) {
 				WithBloomFilter(base, 100, 0.01),
 				discounter,
 				func() cache.IterableCache[string, Product] {
-					return strategies.NewLFUCache[string, Product](10)
+					return strategies.NewLfuCache[string, Product](10)()
 				},
 			),
 			expensiveOnly,
 			func() cache.IterableCache[string, Product] {
-				return strategies.NewLFUCache[string, Product](10)
+				return strategies.NewLfuCache[string, Product](10)()
 			},
 		),
 	)
@@ -104,7 +104,7 @@ func TestBloomFilter_CombinedDecorators(t *testing.T) {
 }
 
 func TestBloomFilter_WithReduceAndMetrics(t *testing.T) {
-	base := strategies.NewLFUCache[string, Product](10)
+	base := strategies.NewLfuCache[string, Product](10)()
 	_ = base.Set("a", Product{"ItemA", 100})
 	_ = base.Set("b", Product{"ItemB", 200})
 	_ = base.Set("c", Product{"ItemC", 50})
@@ -118,7 +118,7 @@ func TestBloomFilter_WithReduceAndMetrics(t *testing.T) {
 		iterableBF,
 		discounter,
 		func() cache.IterableCache[string, Product] {
-			return strategies.NewLFUCache[string, Product](10)
+			return strategies.NewLfuCache[string, Product](10)()
 		},
 	)
 
@@ -126,7 +126,7 @@ func TestBloomFilter_WithReduceAndMetrics(t *testing.T) {
 		mapped,
 		expensiveOnly,
 		func() cache.IterableCache[string, Product] {
-			return strategies.NewLFUCache[string, Product](10)
+			return strategies.NewLfuCache[string, Product](10)()
 		},
 	)
 

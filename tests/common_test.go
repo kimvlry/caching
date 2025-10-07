@@ -11,7 +11,7 @@ import (
 
 // TestCacheErrors tests error conditions that apply to all cache implementations
 func TestCacheErrors(t *testing.T) {
-	c := strategies.NewFIFOCache[string, int](1)
+	c := strategies.NewFifoCache[string, int](1)()
 
 	// Test getting non-existent key
 	_, err := c.Get("nonexistent")

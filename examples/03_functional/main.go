@@ -21,20 +21,16 @@ func main() {
 		return p.Price > 50
 	}
 
-	base := strategies.NewLRUCache[string, Product](10)
+	base := strategies.NewLruCache[string, Product](10)()
 
 	filteredAndMapped := decorators.WithFilter(
 		decorators.WithMap[string, Product](
 			base,
 			discounter,
-			func() cache.IterableCache[string, Product] {
-				return strategies.NewLRUCache[string, Product](10)
-			},
+			strategies.NewLruCache[string, Product](10),
 		),
 		filter,
-		func() cache.IterableCache[string, Product] {
-			return strategies.NewLRUCache[string, Product](10)
-		},
+		strategies.NewLruCache[string, Product](10),
 	)
 
 	cacheWithMetrics := decorators.WithMetrics(filteredAndMapped)

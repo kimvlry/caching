@@ -14,8 +14,7 @@ type fifoCache[K comparable, V any] struct {
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-// NewFIFOCache creates a new FIFO cache with the given capacity
-func NewFIFOCache[K comparable, V any](capacity int) cache.IterableCache[K, V] {
+func newFifoCache[K comparable, V any](capacity int) cache.IterableCache[K, V] {
 	return &fifoCache[K, V]{
 		capacity: capacity,
 		data:     make(map[K]V, capacity),

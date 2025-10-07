@@ -5,12 +5,11 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/kimvlry/caching/cache"
 	"github.com/kimvlry/caching/cache/strategies"
 )
 
 func TestWithReduce_Sum(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("a", 1)
 	_ = baseCache.Set("b", 2)
 	_ = baseCache.Set("c", 3)
@@ -29,7 +28,7 @@ func TestWithReduce_Sum(t *testing.T) {
 }
 
 func TestWithReduce_Product(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("a", 2)
 	_ = baseCache.Set("b", 3)
 	_ = baseCache.Set("c", 4)
@@ -46,7 +45,7 @@ func TestWithReduce_Product(t *testing.T) {
 }
 
 func TestWithReduce_Max(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("a", 5)
 	_ = baseCache.Set("b", 12)
 	_ = baseCache.Set("c", 3)
@@ -69,7 +68,7 @@ func TestWithReduce_Max(t *testing.T) {
 }
 
 func TestWithReduce_Min(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("a", 5)
 	_ = baseCache.Set("b", 12)
 	_ = baseCache.Set("c", 3)
@@ -92,7 +91,7 @@ func TestWithReduce_Min(t *testing.T) {
 }
 
 func TestWithReduce_StringConcatenation(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, string](10)
+	baseCache := strategies.NewLruCache[string, string](10)()
 	_ = baseCache.Set("1", "Hello")
 	_ = baseCache.Set("2", " ")
 	_ = baseCache.Set("3", "World")
@@ -115,7 +114,7 @@ func TestWithReduce_ComplexAccumulator(t *testing.T) {
 		Avg   float64
 	}
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("a", 10)
 	_ = baseCache.Set("b", 20)
 	_ = baseCache.Set("c", 30)
@@ -147,7 +146,7 @@ func TestWithReduce_ComplexAccumulator(t *testing.T) {
 }
 
 func TestWithReduce_EmptyCache(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 
 	sum := WithReduce[string, int, int](
 		baseCache,
@@ -161,7 +160,7 @@ func TestWithReduce_EmptyCache(t *testing.T) {
 }
 
 func TestWithReduce_SingleElement(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("only", 100)
 
 	result := WithReduce[string, int, int](
@@ -176,7 +175,7 @@ func TestWithReduce_SingleElement(t *testing.T) {
 }
 
 func TestWithReduce_WithFilteredCache(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	for i := 1; i <= 10; i++ {
 		_ = baseCache.Set(fmt.Sprintf("key%d", i), i)
 	}
@@ -184,9 +183,7 @@ func TestWithReduce_WithFilteredCache(t *testing.T) {
 	filtered := WithFilter(
 		baseCache,
 		func(v int) bool { return v%2 == 0 },
-		func() cache.IterableCache[string, int] {
-			return strategies.NewLRUCache[string, int](10)
-		},
+		strategies.NewLruCache[string, int](10),
 	)
 
 	sum := WithReduce[string, int, int](
@@ -201,7 +198,7 @@ func TestWithReduce_WithFilteredCache(t *testing.T) {
 }
 
 func TestWithReduce_WithMappedCache(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("a", 1)
 	_ = baseCache.Set("b", 2)
 	_ = baseCache.Set("c", 3)
@@ -209,9 +206,7 @@ func TestWithReduce_WithMappedCache(t *testing.T) {
 	mapped := WithMap(
 		baseCache,
 		func(v int) int { return v * 2 },
-		func() cache.IterableCache[string, int] {
-			return strategies.NewLRUCache[string, int](10)
-		},
+		strategies.NewLruCache[string, int](10),
 	)
 
 	sum := WithReduce[string, int, int](
@@ -226,7 +221,7 @@ func TestWithReduce_WithMappedCache(t *testing.T) {
 }
 
 func TestWithReduce_CollectToSlice(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("a", 1)
 	_ = baseCache.Set("b", 2)
 	_ = baseCache.Set("c", 3)
@@ -258,7 +253,7 @@ func TestWithReduce_CollectToMap(t *testing.T) {
 		Name string
 	}
 
-	baseCache := strategies.NewLRUCache[string, User](10)
+	baseCache := strategies.NewLruCache[string, User](10)()
 	_ = baseCache.Set("u1", User{ID: 1, Name: "Alice"})
 	_ = baseCache.Set("u2", User{ID: 2, Name: "Bob"})
 	_ = baseCache.Set("u3", User{ID: 3, Name: "Charlie"})
@@ -288,7 +283,7 @@ func TestWithReduce_CollectToMap(t *testing.T) {
 }
 
 func TestWithReduce_CountOccurrences(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, string](10)
+	baseCache := strategies.NewLruCache[string, string](10)()
 	_ = baseCache.Set("1", "apple")
 	_ = baseCache.Set("2", "banana")
 	_ = baseCache.Set("3", "apple")

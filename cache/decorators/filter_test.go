@@ -3,13 +3,13 @@ package decorators
 import (
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/kimvlry/caching/cache"
 	"github.com/kimvlry/caching/cache/strategies"
 )
 
 func TestWithFilter_BasicFiltering(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 5)
 	_ = baseCache.Set("key2", 15)
 	_ = baseCache.Set("key3", 25)
@@ -18,9 +18,7 @@ func TestWithFilter_BasicFiltering(t *testing.T) {
 	filtered := WithFilter(
 		baseCache,
 		func(v int) bool { return v > 10 },
-		func() cache.IterableCache[string, int] {
-			return strategies.NewLRUCache[string, int](10)
-		},
+		strategies.NewLruCache[string, int](10),
 	)
 
 	if _, err := filtered.Get("key1"); err == nil {
@@ -50,7 +48,7 @@ func TestWithFilter_BasicFiltering(t *testing.T) {
 }
 
 func TestWithFilter_FilterAll(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 1)
 	_ = baseCache.Set("key2", 2)
 	_ = baseCache.Set("key3", 3)
@@ -58,9 +56,7 @@ func TestWithFilter_FilterAll(t *testing.T) {
 	filtered := WithFilter(
 		baseCache,
 		func(v int) bool { return v > 100 },
-		func() cache.IterableCache[string, int] {
-			return strategies.NewLRUCache[string, int](10)
-		},
+		strategies.NewLruCache[string, int](10),
 	)
 
 	for _, key := range []string{"key1", "key2", "key3"} {
@@ -78,7 +74,7 @@ func TestWithFilter_FilterAll(t *testing.T) {
 }
 
 func TestWithFilter_FilterNone(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 1)
 	_ = baseCache.Set("key2", 2)
 	_ = baseCache.Set("key3", 3)
@@ -86,9 +82,7 @@ func TestWithFilter_FilterNone(t *testing.T) {
 	filtered := WithFilter(
 		baseCache,
 		func(v int) bool { return true },
-		func() cache.IterableCache[string, int] {
-			return strategies.NewLRUCache[string, int](10)
-		},
+		strategies.NewLruCache[string, int](10),
 	)
 
 	testCases := []struct {
@@ -120,7 +114,7 @@ func TestWithFilter_FilterNone(t *testing.T) {
 }
 
 func TestWithFilter_ImmutabilitySourceCache(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 5)
 	_ = baseCache.Set("key2", 15)
 	_ = baseCache.Set("key3", 25)
@@ -128,9 +122,7 @@ func TestWithFilter_ImmutabilitySourceCache(t *testing.T) {
 	filtered := WithFilter(
 		baseCache,
 		func(v int) bool { return v > 10 },
-		func() cache.IterableCache[string, int] {
-			return strategies.NewLRUCache[string, int](10)
-		},
+		strategies.NewLruCache[string, int](10),
 	)
 
 	_ = filtered.Set("key5", 50)
@@ -150,7 +142,7 @@ func TestWithFilter_And_Map_Chained(t *testing.T) {
 		Price int
 	}
 
-	baseCache := strategies.NewLRUCache[string, Product](10)
+	baseCache := strategies.NewLruCache[string, Product](10)()
 	_ = baseCache.Set("p1", Product{1, "A", 50})
 	_ = baseCache.Set("p2", Product{2, "B", 150})
 	_ = baseCache.Set("p3", Product{3, "C", 200})
@@ -158,9 +150,7 @@ func TestWithFilter_And_Map_Chained(t *testing.T) {
 	filtered := WithFilter(
 		baseCache,
 		func(p Product) bool { return p.Price > 100 },
-		func() cache.IterableCache[string, Product] {
-			return strategies.NewLRUCache[string, Product](10)
-		},
+		strategies.NewLruCache[string, Product](10),
 	)
 
 	mapped := WithMap(
@@ -169,9 +159,7 @@ func TestWithFilter_And_Map_Chained(t *testing.T) {
 			p.Price += 50
 			return p
 		},
-		func() cache.IterableCache[string, Product] {
-			return strategies.NewLRUCache[string, Product](10)
-		},
+		strategies.NewLruCache[string, Product](10),
 	)
 
 	if _, err := mapped.Get("p1"); err == nil {
@@ -198,11 +186,10 @@ func TestWithFilter_And_Map_Chained(t *testing.T) {
 			t.Errorf("Base cache mutated! key=%s, val=%+v, expected=%+v", k, val, expected)
 		}
 	}
-
 }
 
 func TestWithFilter_StringFiltering(t *testing.T) {
-	stringCache := strategies.NewLRUCache[string, string](10)
+	stringCache := strategies.NewLruCache[string, string](10)()
 	_ = stringCache.Set("user:1", "alice@example.com")
 	_ = stringCache.Set("user:2", "bob@gmail.com")
 	_ = stringCache.Set("user:3", "charlie@example.com")
@@ -213,9 +200,7 @@ func TestWithFilter_StringFiltering(t *testing.T) {
 		func(email string) bool {
 			return strings.HasSuffix(email, "@example.com")
 		},
-		func() cache.IterableCache[string, string] {
-			return strategies.NewLRUCache[string, string](10)
-		},
+		strategies.NewLruCache[string, string](10),
 	)
 
 	testCases := []struct {
@@ -234,6 +219,116 @@ func TestWithFilter_StringFiltering(t *testing.T) {
 
 		if exists != tc.shouldExist {
 			t.Errorf("%s: expected exists=%v, got exists=%v", tc.key, tc.shouldExist, exists)
+		}
+	}
+}
+
+func TestWithFilter_DifferentEvictionStrategy_LFU(t *testing.T) {
+	baseLRU := strategies.NewLruCache[string, int](10)()
+	_ = baseLRU.Set("key1", 5)
+	_ = baseLRU.Set("key2", 15)
+	_ = baseLRU.Set("key3", 25)
+
+	filtered := WithFilter(
+		baseLRU,
+		func(v int) bool { return v > 10 },
+		strategies.NewLfuCache[string, int](10), // changed strategy!
+	)
+
+	if _, err := filtered.Get("key1"); err == nil {
+		t.Error("key1 should be filtered out")
+	}
+
+	val, err := filtered.Get("key2")
+	if err != nil || val != 15 {
+		t.Errorf("key2 expected 15, got %d", val)
+	}
+
+	val, err = filtered.Get("key3")
+	if err != nil || val != 25 {
+		t.Errorf("key3 expected 25, got %d", val)
+	}
+
+	for k, expected := range map[string]int{"key1": 5, "key2": 15, "key3": 25} {
+		val, _ := baseLRU.Get(k)
+		if val != expected {
+			t.Errorf("Base cache mutated! key=%s, val=%d", k, val)
+		}
+	}
+}
+
+func TestWithFilter_DifferentEvictionStrategy_TTL(t *testing.T) {
+	baseCache := strategies.NewLruCache[string, int](10)()
+	_ = baseCache.Set("key1", 10)
+	_ = baseCache.Set("key2", 20)
+	_ = baseCache.Set("key3", 30)
+
+	filtered := WithFilter(
+		baseCache,
+		func(v int) bool { return v >= 20 },
+		strategies.NewTtlCache[string, int](10, 200*time.Millisecond),
+	)
+
+	val, err := filtered.Get("key2")
+	if err != nil || val != 20 {
+		t.Errorf("key2 expected 20, got %d", val)
+	}
+
+	val, err = filtered.Get("key3")
+	if err != nil || val != 30 {
+		t.Errorf("key3 expected 30, got %d", val)
+	}
+
+	if _, err := filtered.Get("key1"); err == nil {
+		t.Error("key1 should be filtered out")
+	}
+
+	time.Sleep(250 * time.Millisecond)
+
+	_, err = filtered.Get("key2")
+	if err == nil {
+		t.Error("key2 should be expired")
+	}
+
+	_, err = filtered.Get("key3")
+	if err == nil {
+		t.Error("key3 should be expired")
+	}
+
+	for k, expected := range map[string]int{"key1": 10, "key2": 20, "key3": 30} {
+		val, _ := baseCache.Get(k)
+		if val != expected {
+			t.Errorf("Base cache mutated! key=%s, val=%d", k, val)
+		}
+	}
+}
+
+func TestWithFilter_SameAs_Factory(t *testing.T) {
+	baseCache := strategies.NewLfuCache[string, int](10)()
+	_ = baseCache.Set("key1", 5)
+	_ = baseCache.Set("key2", 15)
+	_ = baseCache.Set("key3", 25)
+
+	filtered := WithFilter(
+		baseCache,
+		func(v int) bool { return v > 10 },
+		strategies.NewLfuCache[string, int](10),
+	)
+
+	val, err := filtered.Get("key2")
+	if err != nil || val != 15 {
+		t.Errorf("key2 expected 15, got %d", val)
+	}
+
+	val, err = filtered.Get("key3")
+	if err != nil || val != 25 {
+		t.Errorf("key3 expected 25, got %d", val)
+	}
+
+	for k, expected := range map[string]int{"key1": 5, "key2": 15, "key3": 25} {
+		val, _ := baseCache.Get(k)
+		if val != expected {
+			t.Errorf("Base cache mutated! key=%s, val=%d", k, val)
 		}
 	}
 }

@@ -3,12 +3,13 @@ package decorators
 import (
 	"fmt"
 	"github.com/kimvlry/caching/cache"
+	"github.com/kimvlry/caching/cache/strategies"
 )
 
 func WithMap[K comparable, V any](
 	base cache.IterableCache[K, V],
 	mapper func(V) V,
-	factory func() cache.IterableCache[K, V],
+	factory strategies.CacheFactory[K, V],
 ) cache.IterableCache[K, V] {
 
 	mapped := factory()

@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestTTLCache tests the TTL cache implementation with default TTL
+// TestTTLCache tests the NewTtlCache cache implementation with default NewTtlCache
 func TestTTLCache(t *testing.T) {
-	c := NewTTLCache[string, int](3, 100*time.Millisecond)
+	c := NewTtlCache[string, int](3, 100*time.Millisecond)()
 
 	// Test basic operations
 	err := c.Set("a", 1)
@@ -41,9 +41,9 @@ func TestTTLCache(t *testing.T) {
 	assert.Equal(t, 3, val)
 }
 
-// TestTTLCacheWithCustomTTL tests individual TTL per item
+// TestTTLCacheWithCustomTTL tests individual NewTtlCache per item
 func TestTTLCacheWithCustomTTL(t *testing.T) {
-	c := NewTTLCache[string, string](10, 500*time.Millisecond)
+	c := NewTtlCache[string, string](10, 500*time.Millisecond)()
 
 	// Type assert to TTLCache interface
 	ttlCache, ok := c.(TTLCache[string, string])
@@ -79,7 +79,7 @@ func TestTTLCacheWithCustomTTL(t *testing.T) {
 	assert.Error(t, err, "short-lived item should be expired")
 
 	val, err = c.Get("default")
-	require.NoError(t, err, "default TTL item should still be alive")
+	require.NoError(t, err, "default NewTtlCache item should still be alive")
 	assert.Equal(t, "uses 500ms", val)
 
 	val, err = c.Get("long")
@@ -90,7 +90,7 @@ func TestTTLCacheWithCustomTTL(t *testing.T) {
 	time.Sleep(400 * time.Millisecond)
 
 	_, err = c.Get("default")
-	assert.Error(t, err, "default TTL item should be expired")
+	assert.Error(t, err, "default NewTtlCache item should be expired")
 
 	val, err = c.Get("long")
 	require.NoError(t, err, "long-lived item should still be alive")
@@ -103,38 +103,38 @@ func TestTTLCacheWithCustomTTL(t *testing.T) {
 	assert.Error(t, err, "long-lived item should be expired")
 }
 
-// TestTTLCacheUpdateWithCustomTTL tests updating existing items with new TTL
+// TestTTLCacheUpdateWithCustomTTL tests updating existing items with new NewTtlCache
 func TestTTLCacheUpdateWithCustomTTL(t *testing.T) {
-	c := NewTTLCache[string, int](10, 1*time.Second)
+	c := NewTtlCache[string, int](10, 1*time.Second)()
 	ttlCache := c.(TTLCache[string, int])
 
-	// Add item with short TTL
+	// Add item with short NewTtlCache
 	err := ttlCache.SetWithTTL("key", 1, 100*time.Millisecond)
 	require.NoError(t, err)
 
-	// Wait 50ms, then update with longer TTL
+	// Wait 50ms, then update with longer NewTtlCache
 	time.Sleep(50 * time.Millisecond)
 	err = ttlCache.SetWithTTL("key", 2, 500*time.Millisecond)
 	require.NoError(t, err)
 
 	// Wait another 100ms (total 150ms from original)
-	// Original would have expired, but new TTL keeps it alive
+	// Original would have expired, but new NewTtlCache keeps it alive
 	time.Sleep(100 * time.Millisecond)
 
 	val, err := c.Get("key")
-	require.NoError(t, err, "item should still be alive with extended TTL")
+	require.NoError(t, err, "item should still be alive with extended NewTtlCache")
 	assert.Equal(t, 2, val, "value should be updated")
 
-	// Wait until new TTL expires
+	// Wait until new NewTtlCache expires
 	time.Sleep(400 * time.Millisecond)
 
 	_, err = c.Get("key")
-	assert.Error(t, err, "item should be expired after new TTL")
+	assert.Error(t, err, "item should be expired after new NewTtlCache")
 }
 
 // TestTTLCacheMixedOperations tests mixing Set and SetWithTTL
 func TestTTLCacheMixedOperations(t *testing.T) {
-	c := NewTTLCache[string, string](5, 200*time.Millisecond)
+	c := NewTtlCache[string, string](5, 200*time.Millisecond)()
 	ttlCache := c.(TTLCache[string, string])
 
 	// Mix of default and custom TTLs
@@ -176,7 +176,7 @@ func TestTTLCacheMixedOperations(t *testing.T) {
 
 // TestTTLCacheEvictionEvents tests that eviction events are fired
 func TestTTLCacheEvictionEvents(t *testing.T) {
-	c := NewTTLCache[string, int](3, 100*time.Millisecond)
+	c := NewTtlCache[string, int](3, 100*time.Millisecond)()
 	ttlCache := c.(TTLCache[string, int])
 
 	evictions := 0
@@ -216,7 +216,7 @@ func TestTTLCacheEvictionEvents(t *testing.T) {
 
 // TestTTLCacheCapacityWithCustomTTL tests capacity limits with different TTLs
 func TestTTLCacheCapacityWithCustomTTL(t *testing.T) {
-	c := NewTTLCache[string, int](3, 1*time.Second)
+	c := NewTtlCache[string, int](3, 1*time.Second)()
 	ttlCache := c.(TTLCache[string, int])
 
 	// Fill cache
@@ -224,7 +224,7 @@ func TestTTLCacheCapacityWithCustomTTL(t *testing.T) {
 	_ = ttlCache.SetWithTTL("b", 2, 200*time.Millisecond)
 	_ = ttlCache.SetWithTTL("c", 3, 300*time.Millisecond)
 
-	// Add fourth item - should evict 'a' (shortest TTL, earliest expiration)
+	// Add fourth item - should evict 'a' (shortest NewTtlCache, earliest expiration)
 	_ = ttlCache.SetWithTTL("d", 4, 400*time.Millisecond)
 
 	_, err := c.Get("a")
@@ -236,16 +236,16 @@ func TestTTLCacheCapacityWithCustomTTL(t *testing.T) {
 	}
 }
 
-// TestTTLCacheZeroTTL tests edge case with zero TTL
+// TestTTLCacheZeroTTL tests edge case with zero NewTtlCache
 func TestTTLCacheZeroTTL(t *testing.T) {
-	c := NewTTLCache[string, int](5, 100*time.Millisecond)
+	c := NewTtlCache[string, int](5, 100*time.Millisecond)()
 	ttlCache := c.(TTLCache[string, int])
 
-	// Item with zero TTL should expire immediately
+	// Item with zero NewTtlCache should expire immediately
 	err := ttlCache.SetWithTTL("instant", 42, 0)
 	require.NoError(t, err)
 
 	// Should be expired immediately
 	_, err = c.Get("instant")
-	assert.Error(t, err, "item with zero TTL should be immediately expired")
+	assert.Error(t, err, "item with zero NewTtlCache should be immediately expired")
 }

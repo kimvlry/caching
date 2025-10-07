@@ -14,7 +14,7 @@ type lruCache[K comparable, V any] struct {
 	eventCallbacks []func(cache.Event[K, V])
 }
 
-func NewLRUCache[K comparable, V any](capacity int) cache.IterableCache[K, V] {
+func newLruCache[K comparable, V any](capacity int) cache.IterableCache[K, V] {
 	return &lruCache[K, V]{
 		capacity: capacity,
 		data:     make(map[K]V, capacity),

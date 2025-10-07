@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestFIFOCache tests the FIFO cache implementation
+// TestFIFOCache tests the NewFifoCache cache implementation
 func TestFIFOCache(t *testing.T) {
-	c := strategies.NewFIFOCache[string, int](3)
+	c := strategies.NewFifoCache[string, int](3)()
 
 	// Test basic operations
 	err := c.Set("a", 1)
@@ -21,7 +21,7 @@ func TestFIFOCache(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 1, val)
 
-	// Test FIFO eviction
+	// Test NewFifoCache eviction
 	err = c.Set("b", 2)
 	require.NoError(t, err)
 	err = c.Set("c", 3)

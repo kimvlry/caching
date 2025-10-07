@@ -6,7 +6,7 @@ import (
 )
 
 func TestMetricsDecorator_HitsAndMisses(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 100)
 	_ = baseCache.Set("key2", 200)
 
@@ -27,7 +27,7 @@ func TestMetricsDecorator_HitsAndMisses(t *testing.T) {
 }
 
 func TestMetricsDecorator_HitRate(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 100)
 
 	metricsCache := WithMetrics(baseCache)
@@ -46,7 +46,7 @@ func TestMetricsDecorator_HitRate(t *testing.T) {
 }
 
 func TestMetricsDecorator_HitRateEmpty(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	metricsCache := WithMetrics(baseCache)
 
 	hitRate := metricsCache.HitRate()
@@ -56,7 +56,7 @@ func TestMetricsDecorator_HitRateEmpty(t *testing.T) {
 }
 
 func TestMetricsDecorator_Evictions_ObservableCache(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](3)
+	baseCache := strategies.NewLfuCache[string, int](3)()
 	metricsCache := WithMetrics(baseCache)
 
 	_ = metricsCache.Set("key1", 1)
@@ -77,7 +77,7 @@ func TestMetricsDecorator_Evictions_ObservableCache(t *testing.T) {
 }
 
 func TestMetricsDecorator_Evictions_NonObservableCache(t *testing.T) {
-	baseCache := strategies.NewFIFOCache[string, int](3)
+	baseCache := strategies.NewFifoCache[string, int](3)()
 	metricsCache := WithMetrics(baseCache)
 
 	_ = metricsCache.Set("key1", 1)
@@ -92,7 +92,7 @@ func TestMetricsDecorator_Evictions_NonObservableCache(t *testing.T) {
 }
 
 func TestMetricsDecorator_DeleteTracking(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 100)
 
 	metricsCache := WithMetrics(baseCache)
@@ -117,7 +117,7 @@ func TestMetricsDecorator_DeleteTracking(t *testing.T) {
 }
 
 func TestMetricsDecorator_CompressionRate(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, []byte](10)
+	baseCache := strategies.NewLruCache[string, []byte](10)()
 	compCache := WithCompression(baseCache, JSONSerializer[TestData]{})
 	metricsCache := WithMetrics(compCache)
 

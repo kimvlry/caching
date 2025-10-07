@@ -14,7 +14,7 @@ type UserSession struct {
 }
 
 func main() {
-	baseTTL := strategies.NewTTLCache[string, UserSession](100, 10*time.Second)
+	baseTTL := strategies.NewTtlCache[string, UserSession](100, 10*time.Second)()
 	cache := decorators.WithMetrics(baseTTL)
 
 	session1 := UserSession{UserID: "user123", Username: "alice", LoginTime: time.Now()}
@@ -22,16 +22,16 @@ func main() {
 	session3 := UserSession{UserID: "user789", Username: "charlie", LoginTime: time.Now()}
 
 	_ = cache.Set("sess_long", session1)
-	fmt.Println("✓ Added long-lived session (10s TTL)")
+	fmt.Println("✓ Added long-lived session (10s NewTtlCache)")
 
 	if ttlCache, ok := cache.(strategies.TTLCache[string, UserSession]); ok {
 		_ = ttlCache.SetWithTTL("sess_short", session2, 3*time.Second)
-		fmt.Println("✓ Added short-lived session (3s TTL)")
+		fmt.Println("✓ Added short-lived session (3s NewTtlCache)")
 	}
 
 	if ttlCache, ok := cache.(strategies.TTLCache[string, UserSession]); ok {
 		_ = ttlCache.SetWithTTL("sess_verylong", session3, 20*time.Second)
-		fmt.Println("✓ Added very-long-lived session (20s TTL)")
+		fmt.Println("✓ Added very-long-lived session (20s NewTtlCache)")
 	}
 
 	fmt.Println("\n--- Checking immediately ---")

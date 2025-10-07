@@ -8,9 +8,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestLRUCache tests the LRU cache implementation
+// TestLRUCache tests the NewLruCache cache implementation
 func TestLRUCache(t *testing.T) {
-	c := strategies.NewLRUCache[string, int](3)
+	c := strategies.NewLruCache[string, int](3)()
 
 	// Test basic operations
 	err := c.Set("a", 1)

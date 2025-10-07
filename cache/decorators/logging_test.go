@@ -14,7 +14,7 @@ func TestLoggingDecorator_Get(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 42)
 
 	loggingCache := WithDebugLogging(baseCache, logger)
@@ -46,7 +46,7 @@ func TestLoggingDecorator_GetNonExistent(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	loggingCache := WithDebugLogging(baseCache, logger)
 
 	_, err := loggingCache.Get("nonexistent")
@@ -70,7 +70,7 @@ func TestLoggingDecorator_Set(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, string](10)
+	baseCache := strategies.NewLruCache[string, string](10)()
 	loggingCache := WithDebugLogging(baseCache, logger)
 
 	err := loggingCache.Set("key1", "value1")
@@ -97,7 +97,7 @@ func TestLoggingDecorator_Delete(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 42)
 
 	loggingCache := WithDebugLogging(baseCache, logger)
@@ -124,7 +124,7 @@ func TestLoggingDecorator_DeleteNonExistent(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	loggingCache := WithDebugLogging(baseCache, logger)
 
 	err := loggingCache.Delete("nonexistent")
@@ -145,7 +145,7 @@ func TestLoggingDecorator_Clear(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	_ = baseCache.Set("key1", 1)
 	_ = baseCache.Set("key2", 2)
 
@@ -170,7 +170,7 @@ func TestLoggingDecorator_CacheTypeInLog(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	loggingCache := WithDebugLogging(baseCache, logger)
 
 	_, _ = loggingCache.Get("key1")
@@ -187,7 +187,7 @@ func TestLoggingDecorator_LogLevelDebug(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	loggingCache := WithDebugLogging(baseCache, logger)
 
 	_ = loggingCache.Set("key1", 42)
@@ -206,7 +206,7 @@ func TestLoggingDecorator_LogLevelWarn(t *testing.T) {
 		Level: slog.LevelWarn,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	loggingCache := WithDebugLogging(baseCache, logger)
 
 	_, _ = loggingCache.Get("nonexistent")
@@ -227,7 +227,7 @@ func TestLoggingDecorator_MultipleOperations(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	loggingCache := WithDebugLogging(baseCache, logger)
 
 	_ = loggingCache.Set("key1", 1)
@@ -260,7 +260,7 @@ func TestLoggingDecorator_CompositionWithMetrics(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	baseCache := strategies.NewLRUCache[string, int](10)
+	baseCache := strategies.NewLruCache[string, int](10)()
 	metricsCache := WithMetrics(baseCache)
 	loggingCache := WithDebugLogging(metricsCache, logger)
 
