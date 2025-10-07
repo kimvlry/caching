@@ -61,51 +61,83 @@ func TestBloomFilter_Clear(t *testing.T) {
 }
 
 func TestBloomFilter_CombinedDecorators(t *testing.T) {
+	base := strategies.NewLFUCache[string, Product](10)
+	_ = base.Set("p1", Product{Name: "Laptop", Price: 1000})
+	_ = base.Set("p2", Product{Name: "Mouse", Price: 20})
+	_ = base.Set("p3", Product{Name: "Monitor", Price: 300})
+	_ = base.Set("p4", Product{Name: "Keyboard", Price: 80})
+
 	chain := WithMetrics(
 		WithFilter(
 			WithMap[string, Product](
-				WithBloomFilter(
-					strategies.NewLFUCache[string, Product](10),
-					100,
-					0.01,
-				),
+				WithBloomFilter(base, 100, 0.01),
 				discounter,
+				func() cache.IterableCache[string, Product] {
+					return strategies.NewLFUCache[string, Product](10)
+				},
 			),
 			expensiveOnly,
+			func() cache.IterableCache[string, Product] {
+				return strategies.NewLFUCache[string, Product](10)
+			},
 		),
 	)
 
-	_ = chain.Set("p1", Product{Name: "Laptop", Price: 1000})
-	_ = chain.Set("p2", Product{Name: "Mouse", Price: 20})
-	_ = chain.Set("p3", Product{Name: "Monitor", Price: 300})
-	_ = chain.Set("p4", Product{Name: "Keyboard", Price: 80})
-
 	v1, err := chain.Get("p1")
 	require.NoError(t, err)
-	assert.True(t, v1.Price > 50)
+	assert.Equal(t, 900, v1.Price)
 
 	_, err = chain.Get("p2")
 	assert.Error(t, err)
 
+	v3, err := chain.Get("p3")
+	require.NoError(t, err)
+	assert.Equal(t, 270, v3.Price)
+
+	v4, err := chain.Get("p4")
+	require.NoError(t, err)
+	assert.Equal(t, 72, v4.Price)
+
 	mAware := chain.(AwareCache[string, Product])
-	assert.GreaterOrEqual(t, mAware.GetHits(), int64(1))
+	assert.GreaterOrEqual(t, mAware.GetHits(), int64(3))
 	assert.GreaterOrEqual(t, mAware.GetMisses(), int64(1))
 }
 
 func TestBloomFilter_WithReduceAndMetrics(t *testing.T) {
-	bf := WithBloomFilter(strategies.NewLFUCache[string, Product](10), 1000, 0.01)
+	base := strategies.NewLFUCache[string, Product](10)
+	_ = base.Set("a", Product{"ItemA", 100})
+	_ = base.Set("b", Product{"ItemB", 200})
+	_ = base.Set("c", Product{"ItemC", 50})
+
+	bf := WithBloomFilter(base, 1000, 0.01)
+
 	iterableBF, ok := any(bf).(cache.IterableCache[string, Product])
 	require.True(t, ok)
 
-	mapped := WithMap[string, Product](iterableBF, discounter)
-	filtered := WithFilter(mapped, expensiveOnly)
+	mapped := WithMap[string, Product](
+		iterableBF,
+		discounter,
+		func() cache.IterableCache[string, Product] {
+			return strategies.NewLFUCache[string, Product](10)
+		},
+	)
+
+	filtered := WithFilter(
+		mapped,
+		expensiveOnly,
+		func() cache.IterableCache[string, Product] {
+			return strategies.NewLFUCache[string, Product](10)
+		},
+	)
+
 	chain := WithMetrics(filtered)
 
-	_ = chain.Set("a", Product{"ItemA", 100})
-	_ = chain.Set("b", Product{"ItemB", 200})
-	_ = chain.Set("c", Product{"ItemC", 50})
+	total := WithReduce[string, Product, int](
+		filtered,
+		0,
+		priceReducer,
+	)
 
-	total := WithReduce[string, Product, int](filtered, 0, priceReducer)
 	assert.Equal(t, 270, total)
 
 	mAware := chain.(AwareCache[string, Product])

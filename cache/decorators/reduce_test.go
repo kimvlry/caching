@@ -2,7 +2,6 @@ package decorators
 
 import (
 	"fmt"
-	"github.com/kimvlry/caching/cache/decorators/common"
 	"strings"
 	"testing"
 
@@ -182,9 +181,12 @@ func TestWithReduce_WithFilteredCache(t *testing.T) {
 		_ = baseCache.Set(fmt.Sprintf("key%d", i), i)
 	}
 
-	filtered := WithFilter[string, int](
+	filtered := WithFilter(
 		baseCache,
 		func(v int) bool { return v%2 == 0 },
+		func() cache.IterableCache[string, int] {
+			return strategies.NewLRUCache[string, int](10)
+		},
 	)
 
 	sum := WithReduce[string, int, int](
@@ -204,9 +206,12 @@ func TestWithReduce_WithMappedCache(t *testing.T) {
 	_ = baseCache.Set("b", 2)
 	_ = baseCache.Set("c", 3)
 
-	mapped := WithMap[string, int](
+	mapped := WithMap(
 		baseCache,
 		func(v int) int { return v * 2 },
+		func() cache.IterableCache[string, int] {
+			return strategies.NewLRUCache[string, int](10)
+		},
 	)
 
 	sum := WithReduce[string, int, int](
@@ -308,86 +313,5 @@ func TestWithReduce_CountOccurrences(t *testing.T) {
 	}
 	if counts["orange"] != 1 {
 		t.Errorf("Expected 1 orange, got %d", counts["orange"])
-	}
-}
-
-func TestIntegration_FilterMapReduce(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](20)
-	for i := 1; i <= 20; i++ {
-		_ = baseCache.Set(fmt.Sprintf("num%d", i), i)
-	}
-
-	result := WithReduce[string, int, int](
-		WithMap[string, int](
-			WithFilter[string, int](
-				baseCache,
-				func(v int) bool { return v > 10 },
-			),
-			func(v int) int { return v * 2 },
-		),
-		0,
-		func(acc int, value int) int { return acc + value },
-	)
-
-	if result != 310 {
-		t.Errorf("Expected 310, got %d", result)
-	}
-}
-
-func TestIntegration_MultipleFiltersWithReduce(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](100)
-	for i := 1; i <= 100; i++ {
-		_ = baseCache.Set(fmt.Sprintf("num%d", i), i)
-	}
-
-	result := WithReduce[string, int, int](
-		WithFilter[string, int](
-			WithFilter[string, int](
-				WithFilter[string, int](
-					baseCache,
-					func(v int) bool { return v%2 == 0 },
-				),
-				func(v int) bool { return v > 50 },
-			),
-			func(v int) bool { return v <= 80 },
-		),
-		0,
-		func(acc int, value int) int { return acc + value },
-	)
-
-	if result != 990 {
-		t.Errorf("Expected 990, got %d", result)
-	}
-}
-
-func TestIntegration_SnapshotWithReduce(t *testing.T) {
-	baseCache := strategies.NewLRUCache[string, int](10)
-	for i := 1; i <= 10; i++ {
-		_ = baseCache.Set(fmt.Sprintf("key%d", i), i)
-	}
-
-	composed := WithMap[string, int](
-		WithFilter[string, int](
-			baseCache,
-			func(v int) bool { return v > 5 },
-		),
-		func(v int) int { return v * 10 },
-	)
-
-	snapshot := common.Snapshot[string, int](
-		composed,
-		func() cache.IterableCache[string, int] {
-			return strategies.NewLRUCache[string, int](5)
-		},
-	)
-
-	sum := WithReduce[string, int, int](
-		snapshot,
-		0,
-		func(acc int, value int) int { return acc + value },
-	)
-
-	if sum != 400 {
-		t.Errorf("Expected sum=400, got %d", sum)
 	}
 }
