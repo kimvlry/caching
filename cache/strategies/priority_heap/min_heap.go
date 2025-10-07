@@ -10,9 +10,9 @@ type MinHeap[K comparable, V any] struct {
 }
 
 func NewMinHeap[K comparable, V any]() *MinHeap[K, V] {
-	return &MinHeap[K, V]{
-		items: []heap_item.Item[K, V]{},
-	}
+	h := &MinHeap[K, V]{items: make([]heap_item.Item[K, V], 0)}
+	heap.Init(h)
+	return h
 }
 
 func (h *MinHeap[K, V]) Len() int {
@@ -37,15 +37,13 @@ func (h *MinHeap[K, V]) Push(x any) {
 
 func (h *MinHeap[K, V]) Pop() any {
 	n := len(h.items)
+	if n == 0 {
+		return nil
+	}
 	item := h.items[n-1]
 	item.SetIndex(-1)
 	h.items = h.items[:n-1]
 	return item
-}
-
-func (h *MinHeap[K, V]) Update(item heap_item.Item[K, V], newPriority int) {
-	item.SetPriority(newPriority)
-	heap.Fix(h, item.GetIndex())
 }
 
 func (h *MinHeap[K, V]) Peek() heap_item.Item[K, V] {

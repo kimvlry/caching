@@ -10,7 +10,7 @@ import (
 
 type lfuCache[K comparable, V any] struct {
 	capacity int
-	data     map[K]*heap_item.MinHeapItem[K, V]
+	data     map[K]heap_item.Item[K, V]
 	keys     *priority_heap.MinHeap[K, V]
 
 	eventCallbacks []func(cache.Event[K, V])
@@ -19,7 +19,7 @@ type lfuCache[K comparable, V any] struct {
 func NewLFUCache[K comparable, V any](capacity int) cache.IterableCache[K, V] {
 	return &lfuCache[K, V]{
 		capacity: capacity,
-		data:     make(map[K]*heap_item.MinHeapItem[K, V], capacity),
+		data:     make(map[K]heap_item.Item[K, V], capacity),
 		keys:     priority_heap.NewMinHeap[K, V](),
 	}
 }
@@ -30,25 +30,29 @@ func (l *lfuCache[K, V]) Get(key K) (V, error) {
 		var zero V
 		return zero, common.ErrKeyNotFound
 	}
-	l.keys.Update(item, item.GetPriority()+1)
-	return item.Value, nil
+
+	item.SetPriority(item.GetPriority() + 1)
+	heap.Fix(l.keys, item.GetIndex())
+
+	return item.GetValue(), nil
 }
 
 func (l *lfuCache[K, V]) Set(key K, value V) error {
 	if item, exists := l.data[key]; exists {
-		item.Value = value
-		l.keys.Update(item, item.GetPriority()+1)
+		item.SetPriority(item.GetPriority() + 1)
+		item.SetValue(value)
+		heap.Fix(l.keys, item.GetIndex())
 		return nil
 	}
 
 	if len(l.data) >= l.capacity {
-		evicted := heap.Pop(l.keys).(*heap_item.MinHeapItem[K, V])
-		delete(l.data, evicted.Key)
+		evicted := heap.Pop(l.keys).(heap_item.Item[K, V])
+		delete(l.data, evicted.GetKey())
 
 		l.emit(cache.Event[K, V]{
 			Type:  cache.EventTypeEviction,
-			Key:   evicted.Key,
-			Value: evicted.Value,
+			Key:   evicted.GetKey(),
+			Value: evicted.GetValue(),
 		})
 	}
 
@@ -69,7 +73,7 @@ func (l *lfuCache[K, V]) Delete(key K) error {
 }
 
 func (l *lfuCache[K, V]) Clear() {
-	l.data = make(map[K]*heap_item.MinHeapItem[K, V])
+	l.data = make(map[K]heap_item.Item[K, V])
 	l.keys = priority_heap.NewMinHeap[K, V]()
 }
 
@@ -84,8 +88,8 @@ func (l *lfuCache[K, V]) emit(event cache.Event[K, V]) {
 }
 
 func (l *lfuCache[K, V]) Range(fn func(K, V) bool) {
-	for k, v := range l.data {
-		if !fn(k, v.Value) {
+	for k, item := range l.data {
+		if !fn(k, item.GetValue()) {
 			break
 		}
 	}
