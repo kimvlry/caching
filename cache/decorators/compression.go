@@ -116,3 +116,9 @@ func (w *compressionDecorator[K, V]) emit(event cache.Event[K, V]) {
 		callback(event)
 	}
 }
+
+func (m *compressionDecorator[K, V]) Range(fn func(K, V) bool) {
+	if iterable, ok := any(m.cacheWrappee).(cache.IterableCache[K, V]); ok {
+		iterable.Range(fn)
+	}
+}

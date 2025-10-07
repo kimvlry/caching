@@ -53,3 +53,9 @@ func (w *loggingDecorator[K, V]) Clear() {
 	w.logger.Debug("Clear method called")
 	w.cacheWrappee.Clear()
 }
+
+func (m *loggingDecorator[K, V]) Range(fn func(K, V) bool) {
+	if iterable, ok := any(m.cacheWrappee).(cache.IterableCache[K, V]); ok {
+		iterable.Range(fn)
+	}
+}
