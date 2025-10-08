@@ -36,7 +36,7 @@ Functional decorators (`Map`, `Filter`) always produce new caches and never modi
 * **Factory pattern** - Flexible cache creation through closures
 * **Thread-safe metrics** - Atomic operations for accurate tracking
 
-## Quick Start
+## 🔑 Quick Start
 
 ### Installation
 
@@ -84,7 +84,7 @@ filteredAndMapped := decorators.WithFilter(
 ```
 You can also create an output cache using a different strategy from the original like in the example above.
 
-## Decorators
+## 🤹🏻‍♀️ Decorators
 
 ### Metrics Decorator
 
@@ -149,7 +149,7 @@ go test ./cache/decorators
 go test ./cache/decorators/functional
 ```
 
-### TODO
+### 🚧 TODO
 
 * Benchmarks
 * Full thread-safety support
