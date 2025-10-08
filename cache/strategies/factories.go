@@ -31,3 +31,9 @@ func NewFifoCache[K comparable, V any](capacity int) CacheFactory[K, V] {
 		return newFifoCache[K, V](capacity)
 	}
 }
+
+func NewArcCache[K comparable, V any](capacity int) CacheFactory[K, V] {
+	return func() cache.IterableCache[K, V] {
+		return newArcCache[K, V](capacity)
+	}
+}
