@@ -1,6 +1,7 @@
 package strategies
 
 import (
+	"container/list"
 	"github.com/kimvlry/caching/cache"
 	"github.com/kimvlry/caching/cache/strategies/common"
 )
@@ -8,8 +9,8 @@ import (
 // lruCache implements a Least Recently Used cache
 type lruCache[K comparable, V any] struct {
 	capacity int
-	data     map[K]V
-	keys     []K
+	data     map[K]*list.Element
+	keys     *list.List
 
 	eventCallbacks []func(cache.Event[K, V])
 }
@@ -17,15 +18,15 @@ type lruCache[K comparable, V any] struct {
 func newLruCache[K comparable, V any](capacity int) cache.IterableCache[K, V] {
 	return &lruCache[K, V]{
 		capacity: capacity,
-		data:     make(map[K]V, capacity),
-		keys:     make([]K, 0, capacity),
+		data:     make(map[K]*list.Element, capacity),
+		keys:     list.New(),
 	}
 }
 
 func (l *lruCache[K, V]) Get(key K) (V, error) {
-	if value, exists := l.data[key]; exists {
-		l.moveKeyToEnd(key)
-		return value, nil
+	if element, exists := l.data[key]; exists {
+		l.keys.MoveToBack(element)
+		return element.Value.(*entry[K, V]).value, nil
 	}
 
 	var zero V
@@ -33,53 +34,50 @@ func (l *lruCache[K, V]) Get(key K) (V, error) {
 }
 
 func (l *lruCache[K, V]) Set(key K, value V) error {
-	if _, exists := l.data[key]; exists {
-		l.moveKeyToEnd(key)
-		l.data[key] = value
+	if elem, exists := l.data[key]; exists {
+		elem.Value.(*entry[K, V]).value = value
+		l.keys.MoveToBack(elem)
 		return nil
 	}
 
 	if len(l.data) >= l.capacity {
-		leastRecentKey := l.keys[0]
-		delete(l.data, leastRecentKey)
-		l.keys = l.keys[1:]
-
-		l.emit(cache.Event[K, V]{
-			Type:  cache.EventTypeEviction,
-			Key:   leastRecentKey,
-			Value: value,
-		})
+		oldest := l.keys.Front()
+		if oldest != nil {
+			evicted := oldest.Value.(*entry[K, V])
+			delete(l.data, evicted.key)
+			l.keys.Remove(oldest)
+			l.emit(cache.Event[K, V]{
+				Type:  cache.EventTypeEviction,
+				Key:   evicted.key,
+				Value: evicted.value,
+			})
+		}
 	}
 
-	l.keys = append(l.keys, key)
-	l.data[key] = value
+	e := &entry[K, V]{key: key, value: value}
+	elem := l.keys.PushBack(e)
+	l.data[key] = elem
 	return nil
 }
 
 func (l *lruCache[K, V]) Delete(key K) error {
-	if _, exists := l.data[key]; !exists {
-		return common.ErrKeyNotFound
+	if elem, exists := l.data[key]; exists {
+		l.keys.Remove(elem)
+		delete(l.data, key)
+		return nil
 	}
-
-	delete(l.data, key)
-
-	for i, k := range l.keys {
-		if k == key {
-			l.keys = append(l.keys[:i], l.keys[i+1:]...)
-			break
-		}
-	}
-	return nil
+	return common.ErrKeyNotFound
 }
 
 func (l *lruCache[K, V]) Clear() {
-	l.data = make(map[K]V, l.capacity)
-	l.keys = make([]K, 0)
+	l.data = make(map[K]*list.Element, l.capacity)
+	l.keys = list.New()
 }
 
 func (l *lruCache[K, V]) Range(fn func(K, V) bool) {
-	for k, v := range l.data {
-		if !fn(k, v) {
+	for elem := l.keys.Front(); elem != nil; elem = elem.Next() {
+		e := elem.Value.(*entry[K, V])
+		if !fn(e.key, e.value) {
 			break
 		}
 	}
@@ -93,14 +91,4 @@ func (l *lruCache[K, V]) emit(event cache.Event[K, V]) {
 	for _, callback := range l.eventCallbacks {
 		callback(event)
 	}
-}
-
-func (l *lruCache[K, V]) moveKeyToEnd(key K) {
-	for i, k := range l.keys {
-		if k == key {
-			l.keys = append(l.keys[:i], l.keys[i+1:]...)
-			break
-		}
-	}
-	l.keys = append(l.keys, key)
 }
