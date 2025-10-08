@@ -43,8 +43,9 @@ func main() {
 	for testName, maxPoints := range testSuites {
 		fmt.Printf("Running %s...\n", testName)
 
-		// Run the specific test
-		cmd := exec.Command("go", "test", "./tests", "-run", testName, "-v", "-json")
+		// CHANGED: run tests in all subfolders
+		cmd := exec.Command("go", "test", "./...", "-run", testName, "-v", "-json")
+
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			fmt.Printf("  Warning: Error running %s: %v\n", testName, err)
