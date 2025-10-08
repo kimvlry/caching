@@ -8,6 +8,8 @@ import (
 	"github.com/kimvlry/caching/cache/strategies/priority_heap/heap_item"
 )
 
+// TODO: optimize to O(1) with double hashing
+
 type lfuCache[K comparable, V any] struct {
 	capacity int
 	data     map[K]heap_item.Item[K, V]

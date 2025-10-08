@@ -143,7 +143,7 @@ func (t *ttlCache[K, V]) Range(f func(K, V) bool) {
 	defer t.mutex.Unlock()
 
 	now := time.Now()
-	for k, item := range t.data {
+	for k, item := range t.data { // TODO: optimize
 		expiresAt := time.Unix(0, item.GetPriority())
 		if now.After(expiresAt) {
 			continue
