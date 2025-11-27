@@ -36,7 +36,7 @@ Functional decorators (`Map`, `Filter`) always produce new caches and never modi
 * **Factory pattern** - Flexible cache creation through closures
 * **Thread-safe metrics** - Atomic operations for accurate tracking
 
-## 🔑 Quick Start
+## Quick Start
 
 ### Installation
 
